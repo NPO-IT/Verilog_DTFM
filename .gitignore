@@ -1,0 +1,16 @@
+**/db/*
+**/simulation/*
+**/greybox_tmp/*
+**/incremental_db/*
+
+*.rpt
+*.qws
+*.v.bak
+*.kpt
+*.ddb
+*.summary
+
+/DTFM.done
+/DTFM.map.smsg
+/serv_req_info.txt
+/DTFM_description.txt
