@@ -18,7 +18,9 @@ reg	[11:0]	FF_DATA;
 wire	[11:0]	m0_DO, m1_DO;
 reg				m0_RE, m1_RE;
 reg				m0_WE, m1_WE;
+wire	[15:0]	hex_data;
 
+receiver rx ( .cClk(clk20), .reset(rst), .dClk(dCLK), .data(dDAT), .sync(dFM), .word(hex_data) );
 
 always@(*) begin
 	case (FF_SWCH)

@@ -21,6 +21,7 @@ initial begin						// clk ~1MHz
 end
 
 initial begin
+	repeat(10)@(posedge dCLK);
 	repeat(5)begin
 		dFM = 1;
 		@(posedge dCLK);
@@ -71,6 +72,7 @@ assign			w[18]	=	{UF2[11:0],							4'd0	};
 assign			w[19]	=	{UF3[11:0],							4'd0	};
 
 initial begin
+	repeat(10)@(posedge dCLK);
 	repeat(5)begin
 		repeat(10240) begin
 			dDAT = w[wrdCnt][bitCnt];
