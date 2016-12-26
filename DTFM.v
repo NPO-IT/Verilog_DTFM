@@ -6,8 +6,5 @@ module DTFM (
 	output FRM
 );
 
-//assign FRM = dDAT;
-//assign FRM = dCLK;
-assign FRM = dFM;
 
 endmodule
