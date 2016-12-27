@@ -1,12 +1,12 @@
 `timescale 10 ps/10 ps
 
 module DTFM_tb();
-reg 				clk;
-reg 				dCLK, dFM, dDAT;
-reg	[3:0]		bitCnt	=	0;
-reg	[4:0]		wrdCnt	=	0;
-reg	[5:0]		strNum	=	0;
-reg	[8:0]		frmNum	=	0;
+reg 				clk = 0;
+reg 				dCLK = 0, dFM = 0, dDAT = 0;
+reg	[3:0]		bitCnt	=	15;
+reg	[4:0]		wrdCnt	=	19;
+reg	[5:0]		strNum	=	63;
+reg	[8:0]		frmNum	=	1023;
 wire				out;
 
 
@@ -20,17 +20,6 @@ initial begin						// clk ~1MHz
 	forever #50000 dCLK = ~dCLK;
 end
 
-initial begin
-	repeat(10)@(posedge dCLK);
-	repeat(5)begin
-		dFM = 1;
-		@(posedge dCLK);
-		dFM = 0;
-		repeat(10239)@(posedge dCLK);
-	end
-	$stop;
-end
-
 // Static
 reg	[11:0]	OK1	=	12'd1101;
 reg	[11:0]	OK2	=	12'd1202;
@@ -40,7 +29,7 @@ reg	[11:0]	VK2	=	12'd240;
 reg	[11:0]	VK3	=	12'd3855;
 reg	[11:0]	UF1	=	12'd1365;
 reg	[11:0]	UF2	=	12'd2730;
-reg	[11:0]	UF3	=	12'd4095;
+reg	[11:0]	UF3	=	12'd0;
 reg	[7:0]		corr	=	8'd101;
 reg	[7:0]		pel	=	8'd111;
 reg	[7:0]		XD		=	8'd121;
@@ -75,6 +64,7 @@ initial begin
 	repeat(10)@(posedge dCLK);
 	repeat(5)begin
 		repeat(10240) begin
+			dFM = 0;
 			dDAT = w[wrdCnt][bitCnt];
 			bitCnt <= bitCnt - 1'b1;
 			if(bitCnt == 4'd15) begin
@@ -86,6 +76,7 @@ initial begin
 					strNum <= strNum + 1'b1;
 					if (strNum == 6'd63) begin
 						frmNum <= frmNum + 1'b1;
+						dFM = 1;
 					end
 					wrdCnt <= 5'b0;
 				end

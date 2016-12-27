@@ -10,7 +10,7 @@ globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.clockFreq = 1;
 	defparam aCLR.delayInSec = 20;
 
-pllMain pll ( .inclk0(clk), .c0(clk12), .c1(clk20) );
+pllMain pll ( .inclk0(clk), .c0(clk12) );
 
 wire				FF_RDEN, FF_SWCH;
 wire	[9:0]		FF_RADR;
@@ -19,8 +19,9 @@ wire	[11:0]	m0_DO, m1_DO;
 reg				m0_RE, m1_RE;
 reg				m0_WE, m1_WE;
 wire	[15:0]	hex_data;
+wire				hex_valid;
 
-receiver rx ( .cClk(clk20), .reset(rst), .dClk(dCLK), .data(dDAT), .sync(dFM), .word(hex_data) );
+receiver rx ( .cClk(clk), .reset(rst), .dClk(dCLK), .data(dDAT), .sync(dFM), .word(hex_data), .ready(hex_valid) );
 
 always@(*) begin
 	case (FF_SWCH)

@@ -60,7 +60,7 @@ if (~reset) begin // initial
 	oParallel <= 0;
 	oSerial <= 0;
 	oValid <= 0;
-
+	oAddr <= 0;
 	oMCM_rq <= 0;
 	MCM_delay <= 0;
 	MCM_rq_delay <= 0;
