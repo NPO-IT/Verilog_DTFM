@@ -23,6 +23,8 @@ wire				hex_valid;
 
 receiver rx ( .cClk(clk), .reset(rst), .dClk(dCLK), .data(dDAT), .sync(dFM), .word(hex_data), .ready(hex_valid) );
 
+//filler fill ( .cClk(clk), .reset(rst), .word(hex_data), .ready(hex_valid), .outWDAT(), .outWREN(), .outWADR() );
+
 always@(*) begin
 	case (FF_SWCH)
 		0: begin

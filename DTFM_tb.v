@@ -62,7 +62,7 @@ assign			w[19]	=	{UF3[11:0],							4'd0	};
 
 initial begin
 	repeat(10)@(posedge dCLK);
-	repeat(5)begin
+	repeat(15)begin
 		repeat(10240) begin
 			dFM = 0;
 			dDAT = w[wrdCnt][bitCnt];
