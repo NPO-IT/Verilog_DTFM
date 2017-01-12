@@ -34,20 +34,24 @@ assign	clkFront		=	(!clkReg[2] & clkReg[1]);
 assign	clkRear		=	(clkReg[2] & !clkReg[1]);
 
 reg	[3:0]		cntBits;
+reg	[13:0]	overallbits;
 
 always@(posedge cClk or negedge reset) begin
 	if(~reset) begin
 		word <= 16'b0;
 		cntBits <= 4'd15;
 		ready <= 1'b0;
+		overallbits <= 14'b0;
 	end else begin
 		if(syncFront) begin
 			word <= 16'b0;
 			cntBits <= 4'd15;
 			ready <= 1'b0;
+			overallbits <= 14'b0;
 		end else begin
 			if(clkRear) begin
 				cntBits <= cntBits - 1'b1;
+				overallbits <= overallbits + 1'b1;
 				word[cntBits] <= data;
 				if (cntBits == 4'd0) ready <= 1'b1;
 			end
