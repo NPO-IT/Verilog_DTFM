@@ -138,8 +138,8 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : 67        :        :                   :      
 RESERVED_INPUT_WITH_WEAK_PULLUP : 68        :        :                   :         : 4         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 69        :        :                   :         : 4         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 70        :        :                   :         : 4         :                
-FRM                          : 71        : output : 2.5 V             :         : 4         : Y              
-PWM                          : 72        : output : 2.5 V             :         : 4         : Y              
+RESERVED_INPUT_WITH_WEAK_PULLUP : 71        :        :                   :         : 4         :                
+RESERVED_INPUT_WITH_WEAK_PULLUP : 72        :        :                   :         : 4         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 73        :        :                   :         : 5         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 74        :        :                   :         : 5         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 75        :        :                   :         : 5         :                
@@ -158,7 +158,7 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : 87        :        :                   :      
 GND+                         : 88        :        :                   :         : 5         :                
 GND+                         : 89        :        :                   :         : 5         :                
 GND+                         : 90        :        :                   :         : 6         :                
-clk80                        : 91        : input  : 2.5 V             :         : 6         : Y              
+GND+                         : 91        :        :                   :         : 6         :                
 CONF_DONE                    : 92        :        :                   :         : 6         :                
 VCCIO6                       : 93        : power  :                   : 2.5V    : 6         :                
 MSEL0                        : 94        :        :                   :         : 6         :                
@@ -179,7 +179,7 @@ GNDA2                        : 108       : gnd    :                   :         
 VCCD_PLL2                    : 109       : power  :                   : 1.2V    :           :                
 dFM                          : 110       : input  : 2.5 V             :         : 7         : Y              
 dDAT                         : 111       : input  : 2.5 V             :         : 7         : Y              
-RESERVED_INPUT_WITH_WEAK_PULLUP : 112       :        :                   :         : 7         :                
+FRM                          : 112       : output : 2.5 V             :         : 7         : Y              
 RESERVED_INPUT_WITH_WEAK_PULLUP : 113       :        :                   :         : 7         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 114       :        :                   :         : 7         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 115       :        :                   :         : 7         :                
@@ -203,7 +203,7 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : 132       :        :                   :      
 RESERVED_INPUT_WITH_WEAK_PULLUP : 133       :        :                   :         : 8         :                
 VCCINT                       : 134       : power  :                   : 1.2V    :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 135       :        :                   :         : 8         :                
-FunFrequency                 : 136       : output : 2.5 V             :         : 8         : Y              
+RESERVED_INPUT_WITH_WEAK_PULLUP : 136       :        :                   :         : 8         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 137       :        :                   :         : 8         :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 138       :        :                   :         : 8         :                
 VCCIO8                       : 139       : power  :                   : 2.5V    : 8         :                

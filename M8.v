@@ -11,18 +11,28 @@ module M8(
 	output reg oSerial,
 	output reg [11:0]oParallel,
 	output reg oValid,
-	output reg [4:0]cntGrp
+	// request signals (depending on reading states)
+	output reg oLCB1_rq,
+	output reg oLCB2_rq,
+	output reg oLCB3_rq,
+	output reg oLCB4_rq,
+	output reg oMCM_rq,
+	output reg [4:0]oLCB_num
 );
 //frame variables
 reg [23:0]outWrd;
 wire [23:0]iDoubled;
 wire [11:0]oSingled;
 reg [1:0]cntDiv, cntCcl;
-reg [4:0]cntBit;
+reg [4:0]cntBit, cntGrp;
 reg [2:0]cntWrd;
 reg [6:0]cntPhr;
 reg [9:0]cntMem;
 reg [3:0]cnt1Sec, cnt10Sec, cnt100Sec, cnt1000Sec;
+// requester variables
+reg [11:0]cntLCBrq;
+reg [4:0]MCM_rq_delay;
+reg oldSw, MCM_delay;
 
 assign iDoubled = {iData[11],iData[11],iData[10],iData[10],iData[9],iData[9],iData[8],iData[8],iData[7],iData[7],iData[6],iData[6],iData[5],iData[5],iData[4],iData[4],iData[3],iData[3],iData[2],iData[2],iData[1],iData[1],iData[0],iData[0]};
 assign oSingled = {outWrd[22], outWrd[20], outWrd[18], outWrd[16], outWrd[14], outWrd[12], outWrd[10], outWrd[8], outWrd[6], outWrd[4], outWrd[2], outWrd[0]};
@@ -40,11 +50,22 @@ if (~reset) begin // initial
 	cnt10Sec <= 0;
 	cnt100Sec <= 0;
 	cnt1000Sec <= 0;
+	cntLCBrq <= 0;
+	oLCB_num <= 0;
+	oLCB1_rq <= 0;
+	oLCB2_rq <= 0;
+	oLCB3_rq <= 0;
+	oLCB4_rq <= 0;
 	oSwitch <= 0;
 	oParallel <= 0;
 	oSerial <= 0;
 	oValid <= 0;
 	oAddr <= 0;
+	oMCM_rq <= 0;
+	MCM_delay <= 0;
+	MCM_rq_delay <= 0;
+	oldSw <= 0;
+
 end else begin	// main
 
 	cntDiv <= cntDiv + 1'b1;
@@ -161,6 +182,42 @@ end else begin	// main
 			cntDiv <= 0;
 		end
 	endcase
+
+//MCM request	
+// search for group switching signal
+if(oldSw != oSwitch) begin
+	MCM_delay <= 1'b1;						// enable count
+end
+oldSw <= oSwitch;
+// make a MCM_RQ signal 15x12MHz clocks
+if(MCM_delay == 1)begin
+	MCM_rq_delay <= MCM_rq_delay + 1'b1;	// count
+	if(MCM_rq_delay == 15) begin			// if done counting
+		MCM_rq_delay <= 0;					// reset counter
+		MCM_delay <= 0;						// disable count
+		oMCM_rq <= 0;						// stop requesting
+	end else begin							// otherwise
+		oMCM_rq <= 1;						// request
+	end
+end
+
+	
+//LCB request
+	cntLCBrq <= cntLCBrq + 1'b1;
+	case (cntLCBrq)
+		0: oLCB1_rq <= 1;
+		20: oLCB1_rq <= 0;
+		750: oLCB2_rq <= 1;
+		770: oLCB2_rq <= 0;
+		1500: oLCB3_rq <= 1;
+		1520: oLCB3_rq <= 0;
+		2250: oLCB4_rq <= 1;
+		2270: oLCB4_rq <= 0;
+		3021: oLCB_num <= oLCB_num + 1'b1;
+		3071: cntLCBrq <= 0;
+	endcase
+
+
 end
 end
 endmodule
