@@ -54,13 +54,15 @@ assign	bufferChanged	=	(oldSwitch != bufSwitch) ? 1'b1 : 1'b0;
 // Takes 2 clocks to set output, use 4 to be sure
 digitalFIFO fifo( .clock(clk), .data(word), .rdreq(fifoRead), .wrreq(readyFront), .empty(e), .full(f), .q(fifoOut), .usedw(fifoUsed));
 
-reg	[3:0]		rSequence;
+localparam		WRITE_MARKER = 0;
+localparam		WRITE_DATA = 1;
+localparam		CHECK_BUFFER = 2;
+
+reg	[4:0]		rSequence;
+reg	[4:0]		wSequence;
 reg	[7:0]		cntSubStream;
 reg	[2:0]		cntMarker;
 reg	[2:0]		state;
-reg				WRITE_MARKER = 3'd0;
-reg				WRITE_DATA = 3'd1;
-reg				CHECK_BUFFER = 3'd2;
 reg				sender;
 reg				enable;
 reg	[175:0]	toWriteBuffer;
@@ -72,7 +74,8 @@ always@(posedge clk or negedge reset) begin
 		outWDAT <= 12'b0;
 		outWREN <= 1'b0;
 		outWADR <= 10'b1;
-		rSequence <= 4'b0;
+		rSequence <= 5'b0;
+		wSequence <= 5'b0;
 		cntSubStream <= 8'b0;
 		cntMarker <= 3'b0;
 		state <= 3'b0;
@@ -131,8 +134,8 @@ always@(posedge clk or negedge reset) begin
 					end
 				end
 				WRITE_DATA: begin
-					rSequence <= rSequence + 1'b1;
-					case(rSequence)
+					wSequence <= wSequence + 1'b1;
+					case(wSequence)
 						0: begin
 							//read 11 words and write 16 words at a time
 							fifoRead <= 1'b1;
@@ -154,9 +157,9 @@ always@(posedge clk or negedge reset) begin
 							endcase
 							pWR <= pWR + 1'b1;
 							if (pWR < 10) begin
-								rSequence <= 4'b0;
+								wSequence <= 5'b0;
 							end else begin
-								rSequence <= 4'd4;
+								wSequence <= 5'd4;
 								pWR <= 1'b0;
 							end
 						end
@@ -191,7 +194,11 @@ always@(posedge clk or negedge reset) begin
 							end else begin
 								outWADR <= outWADR + 1'b1;
 							end
-							if (pRD > 0) rSequence <= 4'd4;
+							if (pRD > 0) begin
+								wSequence <= 5'd4;
+							end else begin
+								wSequence <= 5'd0;
+							end
 						end
 					endcase
 				end
