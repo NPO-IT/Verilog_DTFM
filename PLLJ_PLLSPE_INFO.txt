@@ -1,5 +1,10 @@
+PLL_Name	pllFun:pllF|altpll:altpll_component|pllFun_altpll:auto_generated|pll1
+PLLJITTER	33
+PLLSPEmax	84
+PLLSPEmin	-53
+
 PLL_Name	pllMain:pll|altpll:altpll_component|pllMain_altpll1:auto_generated|pll1
-PLLJITTER	2
+PLLJITTER	51
 PLLSPEmax	84
 PLLSPEmin	-53
 
