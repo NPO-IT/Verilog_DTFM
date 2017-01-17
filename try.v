@@ -1,6 +1,0 @@
-
-localparam 
-
-
-case (state)
-endcase

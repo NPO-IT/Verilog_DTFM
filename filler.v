@@ -68,6 +68,7 @@ reg				enable;
 reg	[175:0]	toWriteBuffer;
 reg	[3:0]		pWR;
 reg	[3:0]		pRD;
+reg	[8:0]		wordsWritten;
 
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin
@@ -84,6 +85,7 @@ always@(posedge clk or negedge reset) begin
 		fifoRead <= 1'b0;
 		pWR <= 4'b0;
 		pRD <= 4'b0;
+		wordsWritten <= 9'd0;
 		toWriteBuffer <= 176'b0;
 	end else begin
 		if ((fifoUsed > 640) && (bufferChanged)) enable <= 1'b1;			// once we get 1000 words - enable the following scheme
@@ -101,6 +103,7 @@ always@(posedge clk or negedge reset) begin
 							cntMarker <= cntMarker + 1'b1;
 							outWREN <= 1'b0;
 							state <= CHECK_BUFFER;
+							sender <= 1'b1;
 							if((outWADR[1:0] == 2'd3)) begin
 								outWADR <= outWADR + 2'd2;
 							end else begin
@@ -111,12 +114,15 @@ always@(posedge clk or negedge reset) begin
 							rSequence <= 4'b0;
 							if (cntMarker[1:0] == 2'b0) begin
 								state <= WRITE_DATA;
-								sender <= 1'b1;
 							end
 						end
 					endcase			
 				end
 				CHECK_BUFFER: begin
+					if((wordsWritten >250) && (cntMarker != 0)) begin		// if first three parts
+						wordsWritten <= 9'd0;
+						sender <= 1'b1;
+					end
 					if(outWADR != 1023) begin
 						if (sender == 1'b1) begin
 							state <= WRITE_MARKER;
@@ -137,7 +143,6 @@ always@(posedge clk or negedge reset) begin
 					wSequence <= wSequence + 1'b1;
 					case(wSequence)
 						0: begin
-							//read 11 words and write 16 words at a time
 							fifoRead <= 1'b1;
 						end
 						1: fifoRead <= 1'b0;
@@ -156,10 +161,15 @@ always@(posedge clk or negedge reset) begin
 								10: toWriteBuffer[15 : 0] <= fifoOut;
 							endcase
 							pWR <= pWR + 1'b1;
+							wordsWritten <= wordsWritten + 1'b1;
 							if (pWR < 10) begin
 								wSequence <= 5'b0;
 							end else begin
 								wSequence <= 5'd4;
+								if (wordsWritten > 250) begin
+									sender <= 1'b0;
+									state <= CHECK_BUFFER;
+								end
 								pWR <= 1'b0;
 							end
 						end
