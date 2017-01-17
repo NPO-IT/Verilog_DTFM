@@ -1,20 +1,24 @@
 module DTFM (
 	input clk,
+	input clk80,
 	input dCLK,
 	input dFM,
 	input dDAT,
+	output PWM,					// 50KHz 30%
+	output FunFrequency,		//33.883333
 	output FRM
 );
-wire 				rst, clk12, clk20;
+wire 				rst, clk12;
 globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.clockFreq = 1;
 	defparam aCLR.delayInSec = 20;
 
-pllMain pll ( .inclk0(clk), .c0(clk12) );
+pllMain pll ( .inclk0(clk), .c0(clk12), .c1(PWM) );
+pllFun pllF ( .inclk0(clk80), .c0(FunFrequency) );
 
 wire				FF_RDEN, FF_SWCH;
 wire	[9:0]		FF_RADR;
-reg	[11:0]	FF_DATA;
+wire	[11:0]	FF_DATA;
 wire	[11:0]	m0_DO, m1_DO;
 reg				m0_RE, m1_RE;
 reg				m0_WE, m1_WE;
@@ -24,7 +28,7 @@ wire				hex_valid;
 receiver rx ( .cClk(clk), .reset(rst), .dClk(dCLK), .data(dDAT), .sync(dFM), .word(hex_data), .ready(hex_valid) );
 
 filler fill ( .clk(clk), .reset(rst), .word(hex_data), .ready(hex_valid), .bufSwitch(FF_SWCH)/*, .outWDAT(), .outWREN(), .outWADR()*/ );
-
+/*
 always@(*) begin
 	case (FF_SWCH)
 		0: begin
@@ -39,9 +43,12 @@ always@(*) begin
 		end
 	endcase
 end
-
+*/
+wire	[4:0]		NUM_GRP;
 grpBuffer m0 ( .clock(clk), .data(0), .rdaddress(FF_RADR), .rden(m0_RE), .wraddress(0), .wren(m0_WE), .q(m0_DO) );
 grpBuffer m1 ( .clock(clk), .data(0), .rdaddress(FF_RADR), .rden(m1_RE), .wraddress(0), .wren(m1_WE), .q(m1_DO) );
-M8 frameFormer ( .reset(rst), .clk(clk12), .iData(FF_DATA), .oSwitch(FF_SWCH), .oRdEn(FF_RDEN), .oAddr(FF_RADR), .oSerial(FRM) );
+M8 frameFormer ( .reset(rst), .clk(clk12), .iData(FF_DATA), .oSwitch(FF_SWCH), .oRdEn(FF_RDEN), .oAddr(FF_RADR), .cntGrp(NUM_GRP), .oSerial(FRM) );
+// temporary frame filler 
+m8Filler tempFiller( .reset(rst), .clk(clk80), .bufGetWord(FF_RDEN), .bufRdPointer(FF_RADR), .cntGrp(NUM_GRP), .dataWord(FF_DATA) );
 
 endmodule
