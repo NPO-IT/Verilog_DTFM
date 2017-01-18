@@ -14,23 +14,11 @@ wire	[30:0]	M 	=	31'b1111100110100100001010111011000;
 wire	[30:0]	nM	=	31'b0000011001011011110101000100111;
 wire	[12:0]	B	=	13'b1111100110101;
 wire	[12:0]	nB	=	13'b0000011001010;
-wire	[10:0]	mark	[0:15];
-assign	mark[0]	=	{ M[30:20] 					};
-assign	mark[1]	=	{ M[19:9]				 	};
-assign	mark[2]	=	{ M[8:0],	B[12:11]		};
-assign	mark[3]	=	{ B[10:0] 					};
-assign	mark[4]	=	{ nM[30:20]					};
-assign	mark[5]	=	{ nM[19:9]				 	};
-assign	mark[6]	=	{ nM[8:0],	B[12:11]		};
-assign	mark[7]	=	{ B[10:0] 					};
-assign	mark[8]	=	{ M[30:20] 					};
-assign	mark[9]	=	{ M[19:9]				 	};
-assign	mark[10]	=	{ M[8:0],	nB[12:11]	};
-assign	mark[11]	=	{ nB[10:0] 					};
-assign	mark[12]	=	{ nM[30:20] 				};
-assign	mark[13]	=	{ nM[19:9]				 	};
-assign	mark[14]	=	{ nM[8:0],	nB[12:11]	};
-assign	mark[15]	=	{ nB[10:0] 					};
+wire	[43:0]	mark	[0:3];
+assign	mark[0]	=	{ M,	B	};
+assign	mark[1]	=	{ nM,	B	};
+assign	mark[2]	=	{ M,	nB	};
+assign	mark[3]	=	{ nM,	nB	};
 
 wire				e, f;
 wire	[16:0]	fifoOut;
@@ -53,164 +41,87 @@ assign	bufferChanged	=	(oldSwitch != bufSwitch) ? 1'b1 : 1'b0;
 
 // Takes 2 clocks to set output, use 4 to be sure
 digitalFIFO fifo( .clock(clk), .data(word), .rdreq(fifoRead), .wrreq(readyFront), .empty(e), .full(f), .q(fifoOut), .usedw(fifoUsed));
+oneBitFIFO outBuffer( .clock(clk), .data(bitDatIn), .rdreq(bitRdrq), .wrreq(bitWreq), .q(bitDatOut), .usedw(bufUsed) );
 
-localparam		WRITE_MARKER = 0;
-localparam		WRITE_DATA = 1;
-localparam		CHECK_BUFFER = 2;
-
-reg	[4:0]		rSequence;
-reg	[4:0]		wSequence;
-reg	[7:0]		cntSubStream;
-reg	[2:0]		cntMarker;
-reg	[2:0]		state;
-reg				sender;
+localparam		READ_DATA = 3'd0;
+localparam		READ_MARKER = 3'd1;
+localparam		DO_CHECKS = 3'd2;
+localparam		WRITE_DATA = 3'd3;
 reg				enable;
-reg	[175:0]	toWriteBuffer;
-reg	[3:0]		pWR;
-reg	[3:0]		pRD;
-reg	[8:0]		wordsWritten;
+reg				bitDatIn;
+reg				bitDatOut;
+reg				bitWreq;
+reg				bitRdrq;
+reg	[2:0]		state;
+reg	[3:0]		mSequence;
+reg	[3:0]		dSequence;
+reg	[43:0]	marker;
+reg	[5:0]		pRead;
+reg	[1:0]		markNumber;
 
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin
 		outWDAT <= 12'b0;
 		outWREN <= 1'b0;
 		outWADR <= 10'b1;
-		rSequence <= 5'b0;
-		wSequence <= 5'b0;
-		cntSubStream <= 8'b0;
-		cntMarker <= 3'b0;
-		state <= 3'b0;
-		sender <= 1'b0;
+		state <= DO_CHECKS;
 		enable <= 1'b0;
 		fifoRead <= 1'b0;
-		pWR <= 4'b0;
-		pRD <= 4'b0;
-		wordsWritten <= 9'd0;
-		toWriteBuffer <= 176'b0;
+		bitDatIn <= 1'b0;
+		bitDatOut <= 1'b0;
+		bitWreq <= 1'b0;
+		bitRdrq <= 1'b0;
+		mSequence <= 4'b0;
+		marker <= 44'b0;
+		pRead <= 6'b43;
+		markNumber <= 2'b0;
+		dSequence <= 4'b0;
 	end else begin
 		if ((fifoUsed > 640) && (bufferChanged)) enable <= 1'b1;			// once we get 1000 words - enable the following scheme
 
 		if (enable) begin
 			case (state)
-				WRITE_MARKER: begin
-					rSequence <= rSequence + 1'b1;
-					case(rSequence)
-						0: begin
-							outWDAT <= { 1'b0, mark[cntMarker] };
-							outWREN <= 1'b1;
-						end
-						3: begin
-							cntMarker <= cntMarker + 1'b1;
-							outWREN <= 1'b0;
-							state <= CHECK_BUFFER;
-							sender <= 1'b1;
-							if((outWADR[1:0] == 2'd3)) begin
-								outWADR <= outWADR + 2'd2;
-							end else begin
-								outWADR <= outWADR + 1'b1;
-							end
-						end
-						4: begin
-							rSequence <= 4'b0;
-							if (cntMarker[1:0] == 2'b0) begin
-								state <= WRITE_DATA;
-							end
-						end
-					endcase			
+				READ_DATA: begin
 				end
-				CHECK_BUFFER: begin
-					if((wordsWritten >250) && (cntMarker != 0)) begin		// if first three parts
-						wordsWritten <= 9'd0;
-						sender <= 1'b1;
-					end
-					if(outWADR != 1023) begin
-						if (sender == 1'b1) begin
-							state <= WRITE_MARKER;
-						end else begin
-							state <= WRITE_DATA;
+				READ_MARKER: begin
+					mSequence <= mSequence + 1'b1;					// make a sequencer
+					case(mSequence)
+						0: begin												// when entered for the first time
+							marker <= mark[markNumber];				// read data to a secondary variable
 						end
-					end else begin
-						if (bufferChanged) begin
-							if (sender == 1'b1) begin
-								state <= WRITE_MARKER;
-							end else begin
-								state <= WRITE_DATA;
-							end
+						1: begin												// then enter a cycle
+							bitDatIn <= marker[pRead];					//	set the bit FIFO input
+							bitRdrq <= 1'b1;								// write enable
 						end
-					end
-				end
-				WRITE_DATA: begin
-					wSequence <= wSequence + 1'b1;
-					case(wSequence)
-						0: begin
-							fifoRead <= 1'b1;
-						end
-						1: fifoRead <= 1'b0;
-						3: begin
-							case (pWR)
-								0: toWriteBuffer[175 : 160] <= fifoOut;
-								1: toWriteBuffer[159 : 144] <= fifoOut;
-								2: toWriteBuffer[143 : 128] <= fifoOut;
-								3: toWriteBuffer[127 : 112] <= fifoOut;
-								4: toWriteBuffer[111 : 96] <= fifoOut;
-								5: toWriteBuffer[95 : 80] <= fifoOut;
-								6: toWriteBuffer[79 : 64] <= fifoOut;
-								7: toWriteBuffer[63 : 48] <= fifoOut;
-								8: toWriteBuffer[47 : 32] <= fifoOut;
-								9: toWriteBuffer[31 : 16] <= fifoOut;
-								10: toWriteBuffer[15 : 0] <= fifoOut;
-							endcase
-							pWR <= pWR + 1'b1;
-							wordsWritten <= wordsWritten + 1'b1;
-							if (pWR < 10) begin
-								wSequence <= 5'b0;
-							end else begin
-								wSequence <= 5'd4;
-								if (wordsWritten > 250) begin
-									sender <= 1'b0;
-									state <= CHECK_BUFFER;
-								end
-								pWR <= 1'b0;
-							end
-						end
-						4: begin
-							pRD <= pRD + 1'b1;
-							case(pRD)
-								0: outWDAT <= { 1'b0, toWriteBuffer[175: 165] };
-								1: outWDAT <= { 1'b0, toWriteBuffer[164: 154] };
-								2: outWDAT <= { 1'b0, toWriteBuffer[153: 143] };
-								3: outWDAT <= { 1'b0, toWriteBuffer[142: 132] };
-								4: outWDAT <= { 1'b0, toWriteBuffer[131: 121] };
-								5: outWDAT <= { 1'b0, toWriteBuffer[120: 110] };
-								6: outWDAT <= { 1'b0, toWriteBuffer[109: 99] };
-								7: outWDAT <= { 1'b0, toWriteBuffer[98: 88] };
-								8: outWDAT <= { 1'b0, toWriteBuffer[87: 77] };
-								9: outWDAT <= { 1'b0, toWriteBuffer[76: 66] };
-								10: outWDAT <= { 1'b0, toWriteBuffer[65: 55] };
-								11: outWDAT <= { 1'b0, toWriteBuffer[54: 44] };
-								12: outWDAT <= { 1'b0, toWriteBuffer[43: 33] };
-								13: outWDAT <= { 1'b0, toWriteBuffer[32: 22] };
-								14: outWDAT <= { 1'b0, toWriteBuffer[21: 11] };
-								15: outWDAT <= { 1'b0, toWriteBuffer[10: 0] };
-							endcase
-						end
-						5: outWREN <= 1'b1;
-						7: begin
-							outWREN <= 1'b0;
-							sender <= 1'b0;
-							state <= CHECK_BUFFER;
-							if((outWADR[1:0] == 2'd3)) begin
-								outWADR <= outWADR + 2'd2;
-							end else begin
-								outWADR <= outWADR + 1'b1;
-							end
-							if (pRD > 0) begin
-								wSequence <= 5'd4;
-							end else begin
-								wSequence <= 5'd0;
+						4: begin												// wait
+							bitRdrq <= 1'b0;								// stop writing
+							if (pRead == 6'd0) begin					// if just wrote last bit 
+								pRead <= 6'd43;							// reset bit pointer
+								markNumber <= markNumber + 1'b1;		// point to next marker
+								mSequence <= 4'd0;						// drop the sequence
+								state <= DO_CHECKS;						// and go for checks
+							end else begin								// otherwise
+								pRead <= pRead - 1'b1;					// point to next bit
+								mSequence <= 4'b1;						// and go write next bit to FIFO
 							end
 						end
 					endcase
+				end
+				DO_CHECKS: begin
+					state <= READ_MARKER;			// first entrance (flag?)
+					
+					// check memory availability
+					
+					if (bufUsed > 6'd12) begin							// if buffer contains more than one word 
+						state <= WRITE_DATA;								// go write word to output
+					end else begin										// otherwise
+						
+						// check written words (if 256 write marker,)
+						
+					end
+				end
+				WRITE_DATA: begin
+					dSequence <= dSequence + 1'b1;
 				end
 			endcase
 		end
