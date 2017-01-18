@@ -172,7 +172,7 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : 100       :        :                   :      
 VCCINT                       : 102       : power  :                   : 1.2V    :           :                
 RESERVED_INPUT_WITH_WEAK_PULLUP : 103       :        :                   :         : 6         :                
 dCLK                         : 104       : input  : 2.5 V             :         : 6         : Y              
-RESERVED_INPUT_WITH_WEAK_PULLUP : 105       :        :                   :         : 6         :                
+HARD_RESET                   : 105       : output : 2.5 V             :         : 6         : Y              
 dDAT                         : 106       : input  : 2.5 V             :         : 6         : Y              
 VCCA2                        : 107       : power  :                   : 2.5V    :           :                
 GNDA2                        : 108       : gnd    :                   :         :           :                

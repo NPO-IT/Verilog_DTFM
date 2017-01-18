@@ -4,15 +4,22 @@ module DTFM (
 	input dCLK,
 	input dFM,
 	input dDAT,
+	output HARD_RESET,
 	output PWM,
 	output fFRQ,
 	output FRM
 );
 wire 				rst, clk12, clk20;
+assign HARD_RESET = 1;
+
 globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.clockFreq = 1;
 	defparam aCLR.delayInSec = 20;
-
+/*
+globalReset hardCLR ( .clk(clk), .rst(HARD_RESET) );
+	defparam aCLR.clockFreq = 32768;
+	defparam aCLR.delayInSec = 2;
+*/
 pllMain pll ( .inclk0(clk), .c0(clk12), .c1(PWM) );
 pllFun pllF ( .inclk0(clk80),	.c0(fFRQ) );
 
