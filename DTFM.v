@@ -18,13 +18,67 @@ reg	[11:0]	FF_DATA;
 wire	[11:0]	m0_DO, m1_DO;
 reg				m0_RE, m1_RE;
 reg				m0_WE, m1_WE;
-wire	[15:0]	hex_data;
-wire				hex_valid;
 
-receiver rx ( .cClk(clk), .reset(rst), .dClk(dCLK), .data(dDAT), .sync(dFM), .word(hex_data), .ready(hex_valid) );
+// read data to output by the rear dClk
+// clear all counters and variables by front sync
+reg	[2:0]		syncReg;
+reg	[2:0]		clkReg;
+wire				syncFront;
+wire				clkFront;
+wire				clkRear;
 
-filler fill ( .clk(clk), .reset(rst), .word(hex_data), .ready(hex_valid), .bufSwitch(FF_SWCH)/*, .outWDAT(), .outWREN(), .outWADR()*/ );
+always@(posedge clk or negedge rst) begin
+	if (~rst) begin syncReg <= 3'b0; end
+	else begin syncReg <= { syncReg[1:0],  dFM }; end
 
+	if (~rst) begin clkReg <= 3'b0; end
+	else begin clkReg <= { clkReg[1:0],  dCLK }; end
+end
+
+assign	syncFront	=	(!syncReg[2] & syncReg[1]);
+assign	clkFront		=	(!clkReg[2] & clkReg[1]);
+assign	clkRear		=	(clkReg[2] & !clkReg[1]);
+
+//reg	[2:0]		clkReg;
+reg				enWriter;
+reg				writeBuffer;
+wire				bufferUsed;
+wire				bufferFull;
+wire				bufferEmpty;
+reg				readBuffer;
+wire				bufferData;
+
+always@(posedge clk or negedge rst) begin
+	if (~rst) begin
+		enWriter <= 1'b0;
+		writeBuffer <= 1'b0;
+		readBuffer <= 1'b0;
+	end else begin
+		if (syncFront) begin
+			enWriter <= 1'b1;
+		end
+		if (enWriter) begin
+			if (clkRear) begin
+				writeBuffer <= 1'b1;
+			end else begin
+				writeBuffer <= 1'b0;
+			end
+		end
+	end
+end
+
+bitBuffer bitBuf ( .clock(clk), .data(dDAT),
+	.rdreq(readBuffer),
+	.wrreq(writeBuffer),
+	.empty(bufferEmpty),
+	.full(bufferFull),
+	.q(bufferData),
+	.usedw(bufferUsed));
+
+
+	
+	
+	
 always@(*) begin
 	case (FF_SWCH)
 		0: begin
