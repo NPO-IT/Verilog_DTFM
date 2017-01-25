@@ -42,17 +42,19 @@ assign	clkRear		=	(clkReg[2] & !clkReg[1]);
 //reg	[2:0]		clkReg;
 reg				enWriter;
 reg				writeBuffer;
-wire				bufferUsed;
+wire	[14:0]	bufferUsed;
 wire				bufferFull;
 wire				bufferEmpty;
-reg				readBuffer;
+wire				readBuffer;
 wire				bufferData;
+wire	[11:0]	DW_DATA;
+wire	[9:0]		DW_ADDR;
+wire				DW_WREN;
 
 always@(posedge clk or negedge rst) begin
 	if (~rst) begin
 		enWriter <= 1'b0;
 		writeBuffer <= 1'b0;
-		readBuffer <= 1'b0;
 	end else begin
 		if (syncFront) begin
 			enWriter <= 1'b1;
@@ -67,35 +69,30 @@ always@(posedge clk or negedge rst) begin
 	end
 end
 
-bitBuffer bitBuf ( .clock(clk), .data(dDAT),
-	.rdreq(readBuffer),
-	.wrreq(writeBuffer),
-	.empty(bufferEmpty),
-	.full(bufferFull),
-	.q(bufferData),
-	.usedw(bufferUsed));
-
-
-	
-	
+bitBuffer bitBuf ( .clock(clk), .data(dDAT), .rdreq(readBuffer), .wrreq(writeBuffer), .empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed));
+digitalWriter digitalData ( .clk(clk), .reset(rst), .bitData(bufferData), .bitRequest(readBuffer), .bitLevel(bufferUsed), .orbSwitch(FF_SWCH), .orbWord(DW_DATA), .orbAddr(DW_ADDR), .orbWren(DW_WREN) );
 	
 always@(*) begin
 	case (FF_SWCH)
 		0: begin
 			m0_RE = FF_RDEN;
 			m1_RE = 1'b0;
+			m0_WE = 1'b0;
+			m1_WE = DW_WREN;
 			FF_DATA = m0_DO;
 		end
 		1: begin
 			m1_RE = FF_RDEN;
 			m0_RE = 1'b0;
+			m0_WE = DW_WREN;
+			m1_WE = 1'b0;
 			FF_DATA = m1_DO;
 		end
 	endcase
 end
 
-grpBuffer m0 ( .clock(clk), .data(0), .rdaddress(FF_RADR), .rden(m0_RE), .wraddress(0), .wren(m0_WE), .q(m0_DO) );
-grpBuffer m1 ( .clock(clk), .data(0), .rdaddress(FF_RADR), .rden(m1_RE), .wraddress(0), .wren(m1_WE), .q(m1_DO) );
+grpBuffer m0 ( .clock(clk), .data(DW_DATA), .rdaddress(FF_RADR), .rden(m0_RE), .wraddress(DW_ADDR), .wren(m0_WE), .q(m0_DO) );
+grpBuffer m1 ( .clock(clk), .data(DW_DATA), .rdaddress(FF_RADR), .rden(m1_RE), .wraddress(DW_ADDR), .wren(m1_WE), .q(m1_DO) );
 M8 frameFormer ( .reset(rst), .clk(clk12), .iData(FF_DATA), .oSwitch(FF_SWCH), .oRdEn(FF_RDEN), .oAddr(FF_RADR), .oSerial(FRM) );
 
 endmodule
