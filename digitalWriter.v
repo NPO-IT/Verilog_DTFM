@@ -66,10 +66,10 @@ always@(posedge clk or negedge reset) begin
 
 		if(orbAddr == 1023) begin
 			switched <= 1'b0;
-		end else begin
-			if (bufferChanged) begin
-				switched <= 1'b1;
-			end
+			bitRequest <= 1'b0;
+		end 
+		if (bufferChanged) begin
+			switched <= 1'b1;
 		end
 		
 		if (enable) begin

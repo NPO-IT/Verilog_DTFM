@@ -2,6 +2,7 @@
 
 module DTFM_tb();
 reg 				clk = 0;
+reg 				clk80 = 0;
 reg 				dCLK = 0, dFM = 0, dDAT = 0;
 reg	[3:0]		bitCnt	=	15;
 reg	[4:0]		wrdCnt	=	19;
@@ -13,6 +14,11 @@ wire				out;
 initial begin						// clk ~32768MHz
 	clk = 0;
 	forever #1525 clk = ~clk;
+end
+
+initial begin						// clk ~32768MHz
+	clk80 = 0;
+	forever #625 clk80 = ~clk80;
 end
 
 initial begin						// clk ~1MHz
@@ -90,6 +96,7 @@ end
 
 DTFM DTFM_tb(
 	.clk(clk),
+	.clk80(clk80),
 	.dCLK(dCLK),
 	.dFM(dFM),
 	.dDAT(dDAT),
