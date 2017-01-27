@@ -72,7 +72,8 @@ reg	[5:0]		pMark;
 reg	[2:0]		mSeq;
 reg	[43:0]	marker;
 reg	[14:0]	bitsWritten;
-reg	[8:0]		cntMarker;
+reg	[11:0]	cntMarker;
+
 always@(posedge clk240 or negedge rst) begin
 	if (~rst) begin
 		enWriter <= 1'b0;
@@ -84,15 +85,13 @@ always@(posedge clk240 or negedge rst) begin
 		markerNumber <= 2'b0;
 		marker <= 44'b0;
 		bitsWritten <= 15'b0;
-		cntMarker <= 9'd0;
+		cntMarker <= 12'd0;
 	end else begin
 		case(state)
 			WAIT_MK: begin
 				if (syncFront) begin
 					state <= WRITE_MARKER;
-					bitsWritten <= 15'b0;
 					markerNumber <= 2'b0;
-					cntMarker <= 9'b0;
 				end
 			end
 			WRITE_MARKER: begin
@@ -128,9 +127,11 @@ always@(posedge clk240 or negedge rst) begin
 						writeBuffer <= 1'b1;
 					end else begin
 						writeBuffer <= 1'b0;
-						if(cntMarker == 9'd256) begin
-							cntMarker <= 9'b0;
+						if(cntMarker == 12'd2816) begin
+							cntMarker <= 12'b0;
 							state <= WRITE_MARKER;
+							bitsWritten <= 15'b0;
+							cntMarker <= 12'b0;
 						end
 					end
 				end
@@ -139,9 +140,21 @@ always@(posedge clk240 or negedge rst) begin
 	end
 end
 
-bitBuffer bitBuf ( .clock(clk240), .data(bitBufferData), .rdreq(0), .wrreq(writeBuffer), .empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed));
-//digitalWriter digitalData ( .clk(clk), .reset(rst), .bitData(bufferData), .bitRequest(readBuffer), .bitLevel(bufferUsed), .orbSwitch(FF_SWCH), .orbWord(DW_DATA), .orbAddr(DW_ADDR), .orbWren(DW_WREN) );
-	
+bitBuffer bitBuf ( .clock(clk240), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), .empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed));
+
+digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer),
+.dataRequest(0)
+//.data(0),
+//.dataReady(0)
+);
+
+// here must be module that fills orb buffers sequentially
+
+// these wires come into orb buffer
+//wire	[11:0]	DW_DATA;
+//wire	[9:0]		DW_ADDR;
+//wire				DW_WREN;
+
 always@(*) begin
 	case (FF_SWCH)
 		0: begin
