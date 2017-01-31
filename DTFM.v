@@ -4,9 +4,12 @@ module DTFM (
 	input dCLK,
 	input dFM,
 	input dDAT,
+	output IO_105,
 	output FRM
 );
 wire 				rst, clk12, clk240;
+assign 			IO_105 = 1'b0;
+
 globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.clockFreq = 1;
 	defparam aCLR.delayInSec = 20;
@@ -38,10 +41,8 @@ always@(posedge clk240 or negedge rst) begin
 end
 
 assign	syncFront	=	(!syncReg[2] & syncReg[1]);
-assign	clkFront		=	(!clkReg[2] & clkReg[1]);
 assign	clkRear		=	(clkReg[2] & !clkReg[1]);
 
-reg				enWriter;
 reg				writeBuffer;
 reg	[1:0]		state;
 reg				bitBufferData;
@@ -76,7 +77,6 @@ reg	[11:0]	cntMarker;
 
 always@(posedge clk240 or negedge rst) begin
 	if (~rst) begin
-		enWriter <= 1'b0;
 		writeBuffer <= 1'b0;
 		state <= 1'b0;
 		bitBufferData <= 1'b1;
@@ -142,18 +142,15 @@ end
 
 bitBuffer bitBuf ( .clock(clk240), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), .empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed));
 
-digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer),
-.dataRequest(0)
-//.data(0),
-//.dataReady(0)
-);
+wire digitalDataRequest;
+wire [11:0]digitalData;
+wire digitalDataReady;
 
-// here must be module that fills orb buffers sequentially
+digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer), 
+									.dataRequest(digitalDataRequest), .data(digitalData), .dataReady(digitalDataReady) );
 
-// these wires come into orb buffer
-//wire	[11:0]	DW_DATA;
-//wire	[9:0]		DW_ADDR;
-//wire				DW_WREN;
+frameFiller orbMaker( .clk(clk80), .reset(rst), .digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
+								.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
 
 always@(*) begin
 	case (FF_SWCH)
@@ -174,8 +171,8 @@ always@(*) begin
 	endcase
 end
 
-grpBuffer m0 ( .clock(clk), .data(DW_DATA), .rdaddress(FF_RADR), .rden(m0_RE), .wraddress(DW_ADDR), .wren(m0_WE), .q(m0_DO) );
-grpBuffer m1 ( .clock(clk), .data(DW_DATA), .rdaddress(FF_RADR), .rden(m1_RE), .wraddress(DW_ADDR), .wren(m1_WE), .q(m1_DO) );
+grpBuffer m0 ( .clock(clk80), .data(DW_DATA), .rdaddress(FF_RADR), .rden(m0_RE), .wraddress(DW_ADDR), .wren(m0_WE), .q(m0_DO) );
+grpBuffer m1 ( .clock(clk80), .data(DW_DATA), .rdaddress(FF_RADR), .rden(m1_RE), .wraddress(DW_ADDR), .wren(m1_WE), .q(m1_DO) );
 M8 frameFormer ( .reset(rst), .clk(clk12), .iData(FF_DATA), .oSwitch(FF_SWCH), .oRdEn(FF_RDEN), .oAddr(FF_RADR), .oSerial(FRM) );
 
 endmodule

@@ -50,7 +50,7 @@ always@(posedge clk or negedge reset) begin
 		dataReady <= 1'b0;
 		cntVal <= 3'd0;
 	end else begin
-		if (bitsUsed == 15'd10240) full <= 1'b1;
+		if (bitsUsed > 15'd10416) full <= 1'b1;
 		
 		case (state)
 			WAIT_RQ: begin
@@ -60,7 +60,7 @@ always@(posedge clk or negedge reset) begin
 				seq <= seq + 1'b1;
 				case(seq)
 					0: begin
-						if (bitsTaken < 15'd10240 && full) begin
+						if (bitsTaken < 15'd10416 && full) begin
 							bitsTaken <= bitsTaken + 1'b1;
 							bitToWrite <= bitData;
 							bitRequest <= 1'b1;
@@ -68,16 +68,15 @@ always@(posedge clk or negedge reset) begin
 							full <= 1'b0;
 							bitsTaken <= 15'd0;
 							bitToWrite <= 1'b0;
-							seq <= 5'd2;
 						end
 					end
-					2: begin
+					1: begin
 						bitRequest <= 1'b0;
 						data[pointer] <= bitToWrite;
 						pointer <= pointer - 1'b1;
 					end
-					3: begin
-						if (pointer == 4'd15) begin
+					2: begin
+						if (pointer == 4'd0) begin
 							pointer <= 4'd11;
 							seq <= 5'd0;
 							state <= SEND_DATA;
