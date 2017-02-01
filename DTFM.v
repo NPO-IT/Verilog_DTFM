@@ -74,11 +74,11 @@ reg	[2:0]		mSeq;
 reg	[43:0]	marker;
 reg	[14:0]	bitsWritten;
 reg	[11:0]	cntMarker;
-
+/*
 always@(posedge clk240 or negedge rst) begin
 	if (~rst) begin
 		writeBuffer <= 1'b0;
-		state <= 1'b0;
+		state <= WRITE_DATA;
 		bitBufferData <= 1'b1;
 		pMark <= 6'd43;
 		mSeq <= 3'd0;
@@ -92,6 +92,10 @@ always@(posedge clk240 or negedge rst) begin
 				if (syncFront) begin
 					state <= WRITE_MARKER;
 					markerNumber <= 2'b0;
+					cntMarker <= 12'b0;
+					bitsWritten <= 15'd0;
+					pMark <= 6'd43;
+					mSeq <= 3'd0;
 				end
 			end
 			WRITE_MARKER: begin
@@ -117,7 +121,7 @@ always@(posedge clk240 or negedge rst) begin
 				endcase
 			end
 			WRITE_DATA: begin
-				if (bitsWritten == 15'd10240) begin
+				if (bitsWritten == 15'd10239) begin
 					state <= WAIT_MK;
 				end else begin
 					if (clkRear) begin
@@ -127,11 +131,10 @@ always@(posedge clk240 or negedge rst) begin
 						writeBuffer <= 1'b1;
 					end else begin
 						writeBuffer <= 1'b0;
-						if(cntMarker == 12'd2816) begin
+						if(cntMarker == 12'd2815) begin
 							cntMarker <= 12'b0;
 							state <= WRITE_MARKER;
 							bitsWritten <= 15'b0;
-							cntMarker <= 12'b0;
 						end
 					end
 				end
@@ -139,6 +142,22 @@ always@(posedge clk240 or negedge rst) begin
 		endcase
 	end
 end
+*/
+
+always@(posedge clk240 or negedge rst) begin	
+	if (~rst) begin
+		markerNumber <= 2'd0;
+	end else begin
+		if (clkRear) begin
+			writeBuffer <= 1'b1;
+			bitBufferData <= markerNumber[0];
+			markerNumber <= markerNumber + 1'b1;
+		end else begin
+			writeBuffer <= 1'b0;
+		end
+	end
+end
+
 
 bitBuffer bitBuf ( .clock(clk240), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), .empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed));
 
@@ -151,6 +170,13 @@ digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bits
 
 frameFiller orbMaker( .clk(clk80), .reset(rst), .digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
 								.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
+
+//frameFiller orbMaker( .clk(clk80), .reset(rst), .digitalData(digitalData), .digitalDataReady(digitalDataRequest), .digitalDataRequest(digitalDataRequest),
+//								.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
+//
+//cntFormer testCount(
+//	.clock(digitalDataRequest),
+//	.q(digitalData) );
 
 always@(*) begin
 	case (FF_SWCH)

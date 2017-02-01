@@ -59,7 +59,7 @@ always@(posedge clk or negedge reset) begin
 			POLL_DIGITAL: begin
 				digitalDataRequest <= 1'b1;
 				if (valFront) begin
-					orbData <= 10'd508;//digitalData;
+					orbData <= digitalData;
 					digitalDataRequest <= 1'b0;
 					state <= WRITE_BUFFER;
 				end
