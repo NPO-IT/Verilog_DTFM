@@ -44,7 +44,6 @@ assign	syncFront	=	(!syncReg[2] & syncReg[1]);
 assign	clkRear		=	(clkReg[2] & !clkReg[1]);
 
 reg				writeBuffer;
-reg	[1:0]		state;
 reg				bitBufferData;
 wire	[14:0]	bufferUsed;
 wire				bufferFull;
@@ -58,6 +57,7 @@ wire				DW_WREN;
 localparam		WAIT_MK = 2'd0;
 localparam		WRITE_MARKER = 2'd1;
 localparam		WRITE_DATA = 2'd2;
+localparam		CHECK_CONDITIONS = 2'd3;
 
 wire	[30:0]	M 	=	31'b1111100110100100001010111011000;
 wire	[30:0]	nM	=	31'b0000011001011011110101000100111;
@@ -68,17 +68,60 @@ assign	mark[0]	=	{ M,	B	};
 assign	mark[1]	=	{ nM,	B	};
 assign	mark[2]	=	{ M,	nB	};
 assign	mark[3]	=	{ nM,	nB	};
+
+reg	[1:0]		state;
 reg	[1:0]		markerNumber;
 reg	[5:0]		pMark;
 reg	[2:0]		mSeq;
 reg	[43:0]	marker;
 reg	[14:0]	bitsWritten;
 reg	[11:0]	cntMarker;
+
 /*
+always@(posedge clk240 or negedge rst) begin	
+	if (~rst) begin
+		state <= WAIT_MK;
+	end else begin
+		case(state)
+			WAIT_MK: begin
+				if(syncFront) state <= WRITE_MARKER;
+			end
+			WRITE_MARKER: begin
+				mSeq <= mSeq + 1'b1;
+				case (mSeq)
+					0: marker <= mark[markerNumber];
+					1: begin
+						if (pMark == 6'd63) begin
+							pMark <= 6'd43; 
+							mSeq <= 3'd0;
+							markerNumber <= markerNumber + 1'b1;
+							state <= WRITE_DATA;
+						end else begin
+							bitBufferData <= marker[pMark];
+							writeBuffer <= 1'b1;
+						end
+					end
+					2: begin
+						writeBuffer <= 1'b0;
+						pMark <= pMark - 1'b1;
+						mSeq <= 1'b1;
+					end
+				endcase
+			end
+			WRITE_DATA: begin
+				
+			end
+			CHECK_CONDITIONS: begin
+			end
+		endcase
+	end
+end
+*/
+
 always@(posedge clk240 or negedge rst) begin
 	if (~rst) begin
 		writeBuffer <= 1'b0;
-		state <= WRITE_DATA;
+		state <= WAIT_MK;
 		bitBufferData <= 1'b1;
 		pMark <= 6'd43;
 		mSeq <= 3'd0;
@@ -121,8 +164,9 @@ always@(posedge clk240 or negedge rst) begin
 				endcase
 			end
 			WRITE_DATA: begin
-				if (bitsWritten == 15'd10239) begin
+				if (bitsWritten == 15'd10240) begin
 					state <= WAIT_MK;
+					writeBuffer <= 1'b0;
 				end else begin
 					if (clkRear) begin
 						bitsWritten <= bitsWritten + 1'b1;
@@ -131,30 +175,14 @@ always@(posedge clk240 or negedge rst) begin
 						writeBuffer <= 1'b1;
 					end else begin
 						writeBuffer <= 1'b0;
-						if(cntMarker == 12'd2815) begin
+						if(cntMarker == 12'd2816) begin
 							cntMarker <= 12'b0;
 							state <= WRITE_MARKER;
-							bitsWritten <= 15'b0;
 						end
 					end
 				end
 			end
 		endcase
-	end
-end
-*/
-
-always@(posedge clk240 or negedge rst) begin	
-	if (~rst) begin
-		markerNumber <= 2'd0;
-	end else begin
-		if (clkRear) begin
-			writeBuffer <= 1'b1;
-			bitBufferData <= markerNumber[0];
-			markerNumber <= markerNumber + 1'b1;
-		end else begin
-			writeBuffer <= 1'b0;
-		end
 	end
 end
 
