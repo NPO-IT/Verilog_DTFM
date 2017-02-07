@@ -45,9 +45,9 @@ reg	[7:0]		POS	=	8'd151;
 reg	[7:0]		ARU	=	8'd161;
 // Structure
 wire	[15:0]	w[0:19];
-assign			w[0]	=	{16'b0101010101010101	};
+//assign			w[0]	=	{16'b0101010101010101	};
 
-//assign			w[0]	=	{frmNum[8:0],	strNum[5:0],	1'b1	};
+assign			w[0]	=	{frmNum[8:0],	strNum[5:0],	1'b1	};
 assign			w[1]	=	{OK1[11:0],		corr[7:4]				};
 assign			w[2]	=	{OK2[11:0],		pel[7:4]					};
 assign			w[3]	=	{OK3[11:0],		XD[7:4]					};
@@ -73,7 +73,7 @@ initial begin
 	repeat(15)begin
 		repeat(10240) begin
 			dFM = 0;
-			dDAT = w[0][bitCnt];
+			dDAT = w[wrdCnt][bitCnt];
 			bitCnt <= bitCnt - 1'b1;
 			if(bitCnt == 4'd15) begin
 				wrdCnt <= wrdCnt + 1'b1;
