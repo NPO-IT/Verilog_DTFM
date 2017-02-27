@@ -5,17 +5,39 @@ module DTFM (
 	input		dFM,
 	input		dDAT,
 	output	IO_105,
-	output	FRM
+	output	FRM,
+	
+	output ADC_SCLK,
+	output ADC_nCS,
+	output ADC_SDATA,
+	
+	output	EN1,
+	output	A01,
+	output	A11,
+	output	A21,
+	output	EN2,
+	output	A02,
+	output	A12,
+	output	A22,
+	output	EN3,
+	output	A03,
+	output	A13,
+	output	A23
 );
-wire 				rst, clk12, clk240, clkPWM;
+wire 				rst, clk12, clk240, clkPWM;		//pwm10M
 assign 			IO_105 = 1'b0;
+assign			EN1 = 1'b1;
+assign			EN2 = 1'b1;
+assign			EN3 = 1'b1;
 
 globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.clockFreq = 1;
 	defparam aCLR.delayInSec = 20;
 
-pllMain pll ( .inclk0(clk), .c0(clk12) );
+pllMain pll ( .inclk0(clk), .c0(clk12), .c1(requestADC) );
 pllRX pll80 ( .inclk0(clk80), .c0(clk240), .c1(clkPWM) );
+
+
 
 wire				writeBuffer;
 wire				bitBufferData;
@@ -38,6 +60,21 @@ wire	[11:0]	DW_DATA;
 wire	[9:0]		DW_ADDR;
 wire				DW_WREN;
 
+//Analog Data
+
+switcherMUX ADCswitchMUX ( .reset(rst), .clk(clk80), .switchSignal(~requestADC),
+	.A01(A01), .A11(A11), .A21(A21),
+	.A02(A02), .A12(A12), .A22(A22),
+	.A03(A03), .A13(A13), .A23(A23) );
+
+receiverSPI ADCrxreceiverSPI ( .clk(clk80), .reset(rst), .dataRequest(requestADC),
+	.DAT(ADC_SCLK), .nCS(ADC_nCS), .CLK(ADC_SCLK)
+	//.spiData(),		//[11:0]
+	//.spiReady()
+);
+defparam ADCrxreceiverSPI.SLAVE_DELAY = 6'd10;
+
+//Digital Data
 
 digitalReceiver dRX( .clk240(clk240), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(dFM),
 							.bitBufferData(bitBufferData), .writeBuffer(writeBuffer) );
@@ -47,10 +84,12 @@ bitBuffer bitBuf ( .clock(clk240), .data(bitBufferData), .rdreq(readBuffer), .wr
 
 digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer), 
 									.dataRequest(digitalDataRequest), .data(digitalData), .dataReady(digitalDataReady) );
+									
+//Frame OrbitaM8
 
-frameFiller orbMaker( .clk(clk80), .reset(rst), .digitalData(digitalData), .digitalDataReady(digitalDataReady), 
-								.digitalDataRequest(digitalDataRequest), .orbSwitch(FF_SWCH), .orbData(DW_DATA), 
-								.orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
+frameFiller orbMaker( .clk(clk80), .reset(rst), 
+							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest), 
+							.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
 
 
 always@(*) begin

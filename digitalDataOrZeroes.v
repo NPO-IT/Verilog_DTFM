@@ -57,7 +57,7 @@ always@(posedge clk or negedge reset) begin
 				seq <= seq + 1'b1;
 				case(seq)
 					0: begin
-						if (bitsTaken < 15'd10416 && full) begin
+						if (bitsTaken < 15'd10415 && full) begin
 							bitsTaken <= bitsTaken + 1'b1;
 							bitToWrite <= bitData;
 							bitRequest <= 1'b1;
