@@ -107,5 +107,6 @@ set_location_assignment PIN_1 -to EN1
 set_location_assignment PIN_141 -to EN2
 set_location_assignment PIN_111 -to EN3
 set_location_assignment PIN_105 -to IO_105
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name VERILOG_FILE switcherMUX.v
+set_global_assignment -name QIP_FILE analogBuffer.qip
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

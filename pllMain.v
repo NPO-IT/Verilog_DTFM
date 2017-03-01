@@ -98,7 +98,7 @@ module pllMain (
 		altpll_component.clk0_duty_cycle = 50,
 		altpll_component.clk0_multiply_by = 48,
 		altpll_component.clk0_phase_shift = "0",
-		altpll_component.clk1_divide_by = 800,
+		altpll_component.clk1_divide_by = 8000,
 		altpll_component.clk1_duty_cycle = 50,
 		altpll_component.clk1_multiply_by = 9,
 		altpll_component.clk1_phase_shift = "0",
@@ -179,7 +179,7 @@ endmodule
 // Retrieval info: PRIVATE: DUTY_CYCLE0 STRING "50.00000000"
 // Retrieval info: PRIVATE: DUTY_CYCLE1 STRING "50.00000000"
 // Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "12.582912"
-// Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "0.368640"
+// Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "0.036864"
 // Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
 // Retrieval info: PRIVATE: EXT_FEEDBACK_RADIO STRING "0"
 // Retrieval info: PRIVATE: GLOCKED_COUNTER_EDIT_CHANGED STRING "1"
@@ -208,7 +208,7 @@ endmodule
 // Retrieval info: PRIVATE: MULT_FACTOR1 NUMERIC "1"
 // Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
 // Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "12.58291200"
-// Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "0.36864000"
+// Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "0.03686400"
 // Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "1"
 // Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "1"
 // Retrieval info: PRIVATE: OUTPUT_FREQ_UNIT0 STRING "MHz"
@@ -258,7 +258,7 @@ endmodule
 // Retrieval info: CONSTANT: CLK0_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "48"
 // Retrieval info: CONSTANT: CLK0_PHASE_SHIFT STRING "0"
-// Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "800"
+// Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "8000"
 // Retrieval info: CONSTANT: CLK1_DUTY_CYCLE NUMERIC "50"
 // Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "9"
 // Retrieval info: CONSTANT: CLK1_PHASE_SHIFT STRING "0"

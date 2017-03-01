@@ -59,6 +59,8 @@ reg				m0_WE, m1_WE;
 wire	[11:0]	DW_DATA;
 wire	[9:0]		DW_ADDR;
 wire				DW_WREN;
+wire	[11:0]	ADC_data;
+wire				ADC_valid;
 
 //Analog Data
 
@@ -68,9 +70,8 @@ switcherMUX ADCswitchMUX ( .reset(rst), .clk(clk80), .switchSignal(~requestADC),
 	.A03(A03), .A13(A13), .A23(A23) );
 
 receiverSPI ADCrxreceiverSPI ( .clk(clk80), .reset(rst), .dataRequest(requestADC),
-	.DAT(ADC_SCLK), .nCS(ADC_nCS), .CLK(ADC_SCLK)
-	//.spiData(),		//[11:0]
-	//.spiReady()
+	.DAT(ADC_SCLK), .nCS(ADC_nCS), .CLK(ADC_SCLK),
+	.spiData(ADC_data), .spiReady(ADC_valid)
 );
 defparam ADCrxreceiverSPI.SLAVE_DELAY = 6'd10;
 
@@ -88,7 +89,8 @@ digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bits
 //Frame OrbitaM8
 
 frameFiller orbMaker( .clk(clk80), .reset(rst), 
-							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest), 
+							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
+							.analogData(ADC_data), .analogDataReady(ADC_valid),
 							.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
 
 

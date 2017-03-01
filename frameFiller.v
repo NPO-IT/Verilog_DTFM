@@ -5,6 +5,9 @@ module frameFiller(
 	input 					digitalDataReady,
 	output reg 				digitalDataRequest,
 	
+	input			[11:0]	analogData,
+	input						analogDataReady,
+	
 	input						orbSwitch,
 	output reg	[11:0]	orbData,
 	output reg	[9:0]		orbAddr,
