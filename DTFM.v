@@ -61,19 +61,35 @@ wire	[9:0]		DW_ADDR;
 wire				DW_WREN;
 wire	[11:0]	ADC_data;
 wire				ADC_valid;
+wire	[4:0]		ADC_address;
+wire	[11:0]	ADC_d;
+wire				ADC_v;
+wire	[11:0]	ADC_POWER;
+wire	[11:0]	analogData;
+wire				analogDataRequest;
+
 
 //Analog Data
 
-switcherMUX ADCswitchMUX ( .reset(rst), .clk(clk80), .switchSignal(~requestADC),
+switcherMUX ADCswitchMUX ( .reset(rst), .clk(clk80), .switchSignal(~requestADC), .cntChannel(ADC_address),
 	.A01(A01), .A11(A11), .A21(A21),
 	.A02(A02), .A12(A12), .A22(A22),
 	.A03(A03), .A13(A13), .A23(A23) );
 
 receiverSPI ADCrxreceiverSPI ( .clk(clk80), .reset(rst), .dataRequest(requestADC),
-	.DAT(ADC_SCLK), .nCS(ADC_nCS), .CLK(ADC_SCLK),
+	.DAT(/*ADC_SDATA*/1'b0), .nCS(ADC_nCS), .CLK(ADC_SCLK),
 	.spiData(ADC_data), .spiReady(ADC_valid)
 );
 defparam ADCrxreceiverSPI.SLAVE_DELAY = 6'd10;
+
+distributor analog_distributor ( .clk(clk80), .reset(rst),
+	.data(ADC_data), .valid(ADC_valid), .address(ADC_address),
+	.fData(ADC_d), .fRdEn(ADC_v), .power(ADC_POWER)
+);
+defparam analog_distributor.IGNORED_CHANNEL = 5'd0;
+
+analogBuffer fifoAN ( .clock(clk80), .data(ADC_d), .wrreq(ADC_v), 
+								.rdreq(analogDataRequest),	.q(analogData) );
 
 //Digital Data
 
@@ -90,7 +106,7 @@ digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bits
 
 frameFiller orbMaker( .clk(clk80), .reset(rst), 
 							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
-							.analogData(ADC_data), .analogDataReady(ADC_valid),
+							.analogData(analogData), .analogDataRequest(analogDataRequest),
 							.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
 
 

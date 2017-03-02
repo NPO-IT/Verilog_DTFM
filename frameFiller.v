@@ -6,7 +6,7 @@ module frameFiller(
 	output reg 				digitalDataRequest,
 	
 	input			[11:0]	analogData,
-	input						analogDataReady,
+	output reg				analogDataRequest,
 	
 	input						orbSwitch,
 	output reg	[11:0]	orbData,
@@ -47,6 +47,7 @@ always@(posedge clk or negedge reset) begin
 		orbData <= 12'b0;
 		orbAddr <= 10'b0;
 		orbWrEn <= 1'b0;
+		analogDataRequest <= 1'd0;
 	end else begin
 		case(state)
 			WAIT_BUFFER: begin
@@ -68,10 +69,12 @@ always@(posedge clk or negedge reset) begin
 				end
 			end
 			POLL_ANALOG: begin
-				orbData <= 12'd1016;
+				orbData <= analogData;
+				analogDataRequest <= 1'b1;
 				state <= WRITE_BUFFER;
 			end
 			WRITE_BUFFER: begin
+				analogDataRequest <= 1'b0;
 				if (cntVal < 3) begin 			//long WrEn here, even longer if needed
 					orbWrEn <= 1'b1;
 					cntVal <= cntVal + 1'b1;

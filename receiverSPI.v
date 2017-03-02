@@ -51,6 +51,8 @@ always @(negedge reset or posedge clk) begin
 		pointer <= 4'd15;
 		cntRX <= 5'd0;
 		word <= 12'd0;
+		spiData <= 12'd0;
+		spiReady <= 1'd0;
 	end else begin
 		case (state)
 			STATE_WAIT: begin

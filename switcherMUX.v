@@ -62,6 +62,7 @@ always@(posedge clk or negedge reset) begin
 						if (cntChannel == 5'd16) begin
 							muxA3 <= funConnect[cntA3];
 							cntA3 <= cntA3 + 1'b1;
+							if(cntA3 == 2'd2) cntA3 <= 2'd0;
 						end else begin
 							muxA3 <= 3'd5;
 							cntChannel <= 5'd0;
