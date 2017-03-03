@@ -69,7 +69,7 @@ always@(posedge clk or negedge reset) begin
 				end
 			end
 			POLL_ANALOG: begin
-				orbData <= analogData;
+				orbData <= {1'b0, analogData[11:4], 3'b0};
 				analogDataRequest <= 1'b1;
 				state <= WRITE_BUFFER;
 			end

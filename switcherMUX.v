@@ -21,21 +21,22 @@ localparam WAIT = 2'd2;
 reg	[1:0]		state;
 reg	[2:0]		muxA3;
 
-assign A02 = cntChannel[0];
-assign A12 = cntChannel[1];
-assign A22 = cntChannel[2];
-assign A01 = cntChannel[0];
-assign A11 = cntChannel[1];
-assign A21 = cntChannel[2];
+assign A01 = setA1[0];
+assign A11 = setA1[1];
+assign A21 = setA1[2];
+assign A02 = setA1[0];
+assign A12 = setA1[1];
+assign A22 = setA1[2];
 assign A03 = muxA3[0];
 assign A13 = muxA3[1];
 assign A23 = muxA3[2];
 
 wire	[2:0]		funConnect	[0:2];
-assign funConnect[0] = 3'd3;
-assign funConnect[1] = 3'd4;
-assign funConnect[2] = 3'd6;
+assign funConnect[0] = 3'd2;
+assign funConnect[1] = 3'd3;
+assign funConnect[2] = 3'd5;
 reg 	[1:0]		cntA3;
+reg	[2:0]		setA1;
 
 
 always@(posedge clk or negedge reset) begin
@@ -44,27 +45,29 @@ always@(posedge clk or negedge reset) begin
 		cntChannel <= 5'd0;
 		muxA3 <= 3'b0;
 		cntA3 <= 2'd0;
+		setA1 <= 3'd0;
 	end else begin
 		case(state)
 			SETUP: begin
 				if (switchSignal)begin
 					state <= PREPARE;
+					setA1 <= cntChannel[2:0];
 				end
 			end
 			PREPARE: begin
 				cntChannel <= cntChannel + 1'b1;
 				if (cntChannel < 5'd8) begin
-					muxA3 <= 3'd1;
+					muxA3 <= 3'd0;
 				end else begin
 					if (cntChannel < 5'd16) begin
-						muxA3 <= 3'd2;
+						muxA3 <= 3'd1;
 					end else begin
 						if (cntChannel == 5'd16) begin
 							muxA3 <= funConnect[cntA3];
 							cntA3 <= cntA3 + 1'b1;
 							if(cntA3 == 2'd2) cntA3 <= 2'd0;
 						end else begin
-							muxA3 <= 3'd5;
+							muxA3 <= 3'd4;
 							cntChannel <= 5'd0;
 						end
 					end

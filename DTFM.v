@@ -9,7 +9,7 @@ module DTFM (
 	
 	output ADC_SCLK,
 	output ADC_nCS,
-	output ADC_SDATA,
+	input ADC_SDATA,
 	
 	output	EN1,
 	output	A01,
@@ -77,7 +77,7 @@ switcherMUX ADCswitchMUX ( .reset(rst), .clk(clk80), .switchSignal(~requestADC),
 	.A03(A03), .A13(A13), .A23(A23) );
 
 receiverSPI ADCrxreceiverSPI ( .clk(clk80), .reset(rst), .dataRequest(requestADC),
-	.DAT(/*ADC_SDATA*/1'b0), .nCS(ADC_nCS), .CLK(ADC_SCLK),
+	.DAT(ADC_SDATA), .nCS(ADC_nCS), .CLK(ADC_SCLK),
 	.spiData(ADC_data), .spiReady(ADC_valid)
 );
 defparam ADCrxreceiverSPI.SLAVE_DELAY = 6'd10;
