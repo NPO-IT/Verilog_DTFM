@@ -11,6 +11,9 @@ module DTFM (
 	output ADC_nCS,
 	input ADC_SDATA,
 	
+	output pin83,
+	output pin84,
+	
 	output	EN1,
 	output	A01,
 	output	A11,
@@ -70,8 +73,13 @@ wire				analogDataRequest;
 
 
 //Analog Data
+wire [2:0] test;
+assign pin83 = test[1];
+assign pin84 = test[0];
 
 switcherMUX ADCswitchMUX ( .reset(rst), .clk(clk80), .switchSignal(~requestADC), .cntChannel(ADC_address),
+	//.state(test), 
+	.muxA3(test),
 	.A01(A01), .A11(A11), .A21(A21),
 	.A02(A02), .A12(A12), .A22(A22),
 	.A03(A03), .A13(A13), .A23(A23) );
@@ -86,7 +94,7 @@ distributor analog_distributor ( .clk(clk80), .reset(rst),
 	.data(ADC_data), .valid(ADC_valid), .address(ADC_address),
 	.fData(ADC_d), .fRdEn(ADC_v), .power(ADC_POWER)
 );
-defparam analog_distributor.IGNORED_CHANNEL = 5'd0;
+defparam analog_distributor.IGNORED_CHANNEL = 5'd1;
 
 analogBuffer fifoAN ( .clock(clk80), .data(ADC_d), .wrreq(ADC_v), 
 								.rdreq(analogDataRequest),	.q(analogData) );

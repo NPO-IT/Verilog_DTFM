@@ -1,6 +1,6 @@
 module distributor
 #(
-	parameter IGNORED_CHANNEL = 5'd0
+	parameter IGNORED_CHANNEL = 5'd1
 )
 (
 	input						clk,
