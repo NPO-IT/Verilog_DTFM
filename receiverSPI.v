@@ -45,10 +45,10 @@ always @(negedge reset or posedge clk) begin
 		ready <= 6'd0;
 		slave_ready <= 1'b0;
 		nCS <= 1'b1;
-		state <= 2'b0;
+		state <= STATE_GIVE;
 		delay <= 1'b0;
 		cntDelay <= 6'd0;
-		pointer <= 4'd15;
+		pointer <= 4'd11;
 		cntRX <= 5'd0;
 		word <= 12'd0;
 		spiData <= 12'd0;

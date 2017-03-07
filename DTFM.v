@@ -73,16 +73,24 @@ wire				analogDataRequest;
 
 
 //Analog Data
-wire [2:0] test;
-assign pin83 = test[1];
-assign pin84 = test[0];
+wire [2:0] muxA3;
+wire [2:0] muxA12;
+//assign pin83 = test[1];
+//assign pin84 = test[0];
 
-switcherMUX ADCswitchMUX ( .reset(rst), .clk(clk80), .switchSignal(~requestADC), .cntChannel(ADC_address),
-	//.state(test), 
-	.muxA3(test),
-	.A01(A01), .A11(A11), .A21(A21),
-	.A02(A02), .A12(A12), .A22(A22),
-	.A03(A03), .A13(A13), .A23(A23) );
+assign A01 = muxA12[0];
+assign A11 = muxA12[1];
+assign A21 = muxA12[2];
+assign A02 = muxA12[0];
+assign A12 = muxA12[1];
+assign A22 = muxA12[2];
+assign A03 = muxA3[0];
+assign A13 = muxA3[1];
+assign A23 = muxA3[2];
+
+switcher ADCswMUX ( .reset(rst), .clk(clk80), .spiReceived(ADC_valid),
+	.MxA3(muxA3), .MxA12(muxA12), .rxAddress(ADC_address) 
+);
 
 receiverSPI ADCrxreceiverSPI ( .clk(clk80), .reset(rst), .dataRequest(requestADC),
 	.DAT(ADC_SDATA), .nCS(ADC_nCS), .CLK(ADC_SCLK),

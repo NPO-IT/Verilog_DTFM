@@ -20,6 +20,7 @@ localparam WAIT_FRONT = 2'd0;
 localparam DISTRIBUTE = 2'd1;
 localparam WAIT_REAR = 2'd2;
 reg 	[1:0]		state;
+reg	[4:0]		current;
 
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin 
@@ -27,13 +28,17 @@ always@(posedge clk or negedge reset) begin
 		fData <= 12'd0;
 		power <= 12'd0;
 		state <= 2'd0;
+		current <= 5'd0;
 	end else begin
 		case (state)
 			WAIT_FRONT: begin
-				if(valid) state <= DISTRIBUTE;
+				if(valid) begin
+					state <= DISTRIBUTE;
+					current <= address;
+				end
 			end
 			DISTRIBUTE: begin
-				case (address)
+				case (current)
 					IGNORED_CHANNEL: state <= WAIT_FRONT;
 					5'd17: begin
 						power <= data;
