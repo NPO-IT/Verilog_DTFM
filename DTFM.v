@@ -75,8 +75,6 @@ wire				analogDataRequest;
 //Analog Data
 wire [2:0] muxA3;
 wire [2:0] muxA12;
-//assign pin83 = test[1];
-//assign pin84 = test[0];
 
 assign A01 = muxA12[0];
 assign A11 = muxA12[1];
