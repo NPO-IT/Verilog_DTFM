@@ -11,6 +11,15 @@ module DTFM (
 	output ADC_nCS,
 	input ADC_SDATA,
 	
+	output PWM,
+	
+	output pin50,
+	output pin52,
+	output pin54,
+	output pin73,
+	output pin75,
+	output pin77,
+	
 	output pin83,
 	output pin84,
 	
@@ -70,6 +79,7 @@ wire				ADC_v;
 wire	[11:0]	ADC_POWER;
 wire	[11:0]	analogData;
 wire				analogDataRequest;
+wire				p_val;
 
 
 //Analog Data
@@ -97,14 +107,39 @@ receiverSPI ADCrxreceiverSPI ( .clk(clk80), .reset(rst), .dataRequest(requestADC
 defparam ADCrxreceiverSPI.SLAVE_DELAY = 6'd10;
 
 distributor analog_distributor ( .clk(clk80), .reset(rst),
-	.data(ADC_data), .valid(ADC_valid), .address(ADC_address),
-	.fData(ADC_d), .fRdEn(ADC_v), .power(ADC_POWER)
+	.data(12'd4095-ADC_data), .valid(ADC_valid), .address(ADC_address),
+	.fData(ADC_d), .fRdEn(ADC_v), .power(ADC_POWER), .pwr_chng(p_val)
 );
 defparam analog_distributor.IGNORED_CHANNEL = 5'd1;
 
 analogBuffer fifoAN ( .clock(clk80), .data(ADC_d), .wrreq(ADC_v), 
 								.rdreq(analogDataRequest),	.q(analogData) );
 
+//POWER contol
+
+wire [6:0] duty;
+
+assign pin50 = ADC_POWER[6];
+assign pin52 = ADC_POWER[7];
+assign pin54 = ADC_POWER[8];
+assign pin73 = ADC_POWER[9];
+assign pin75 = ADC_POWER[10];
+assign pin77 = ADC_POWER[11];
+
+PowerController p_ctrl(
+	.clk(p_val),
+	.reset(rst),
+	.curr_pwr(ADC_POWER[11:4]),
+	.duty(duty)
+);
+
+PWM pwm (
+	.clk(clk80),
+	.reset(rst),
+	.duty(7'd29/*duty*/),
+	.out(PWM)
+);
+					
 //Digital Data
 
 digitalReceiver dRX( .clk240(clk240), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(dFM),

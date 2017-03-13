@@ -1,3 +1,4 @@
+Info (10281): Verilog HDL Declaration information at DTFM.v(14): object "PWM" differs only in case from object "pwm" in the same scope
 Warning (10268): Verilog HDL information at digitalDataOrZeroes.v(37): always construct contains both blocking and non-blocking assignments
 Info (10281): Verilog HDL Declaration information at receiverSPI.v(6): object "clk" differs only in case from object "CLK" in the same scope
 Warning (10268): Verilog HDL information at switcher.v(34): always construct contains both blocking and non-blocking assignments

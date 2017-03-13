@@ -12,10 +12,10 @@ localparam PREPARE = 2'd1;
 localparam SETUP = 2'd2;
 localparam RETURN = 2'd3;
 wire	[2:0]		funConnect	[0:3];
-assign funConnect[2'd0] = 3'd5;		//min
-assign funConnect[2'd1] = 3'd3;		//gnd
-assign funConnect[2'd2] = 3'd5;		//max
-assign funConnect[2'd3] = 3'd2;		//gnd
+assign funConnect[2'd0] = 3'd5;		//gnd
+assign funConnect[2'd1] = 3'd2;		//min
+assign funConnect[2'd2] = 3'd5;		//gnd
+assign funConnect[2'd3] = 3'd3;		//max
 
 reg	[2:0]		rxReg;
 wire				rxFront;

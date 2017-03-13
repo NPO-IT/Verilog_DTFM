@@ -12,7 +12,8 @@ module distributor
 	output reg	[11:0]	fData,
 	output reg				fRdEn,
 	
-	output reg	[11:0]	power
+	output reg	[11:0]	power,
+	output reg				pwr_chng
 );
 
 
@@ -29,10 +30,12 @@ always@(posedge clk or negedge reset) begin
 		power <= 12'd0;
 		state <= 2'd0;
 		current <= 5'd0;
+		pwr_chng <= 1'b0;
 	end else begin
 		case (state)
 			WAIT_FRONT: begin
 				if(valid) begin
+					pwr_chng <= 1'b0;
 					state <= DISTRIBUTE;
 					current <= address;
 				end
@@ -42,6 +45,7 @@ always@(posedge clk or negedge reset) begin
 					IGNORED_CHANNEL: state <= WAIT_FRONT;
 					5'd17: begin
 						power <= data;
+						pwr_chng <= 1'b1;
 						state <= WAIT_FRONT;
 					end
 					default: begin

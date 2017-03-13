@@ -93,7 +93,6 @@ set_global_assignment -name QIP_FILE cntFormer.qip
 set_global_assignment -name VERILOG_FILE digitalReceiver.v
 set_global_assignment -name VERILOG_FILE PWM.v
 set_global_assignment -name VERILOG_FILE receiverSPI.v
-set_global_assignment -name VERILOG_FILE flush.v
 set_location_assignment PIN_2 -to A01
 set_location_assignment PIN_142 -to A02
 set_location_assignment PIN_110 -to A03
@@ -139,4 +138,19 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PWM
 set_location_assignment PIN_83 -to pin83
 set_location_assignment PIN_84 -to pin84
 set_global_assignment -name VERILOG_FILE switcher.v
+set_global_assignment -name VERILOG_FILE PowerController.v
+set_location_assignment PIN_50 -to pin50
+set_location_assignment PIN_52 -to pin52
+set_location_assignment PIN_54 -to pin54
+set_location_assignment PIN_73 -to pin73
+set_location_assignment PIN_75 -to pin75
+set_location_assignment PIN_77 -to pin77
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin50
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin52
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin54
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin84
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin73
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin75
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin83
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin77
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
