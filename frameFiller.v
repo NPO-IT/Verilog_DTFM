@@ -8,6 +8,7 @@ module frameFiller(
 	input			[11:0]	analogData,
 	output reg				analogDataRequest,
 	
+	input						nowRead,
 	input						orbSwitch,
 	output reg	[11:0]	orbData,
 	output reg	[9:0]		orbAddr,
@@ -57,8 +58,13 @@ always@(posedge clk or negedge reset) begin
 				end
 			end
 			CHECK_ADDRESS: begin
-				if(orbAddr[1:0] != 2'd0) begin state <= POLL_DIGITAL; end 
-				else begin state <= POLL_ANALOG; end
+				
+					if(orbAddr[1:0] != 2'd0) begin 
+						/*if(nowRead)*/ state <= POLL_DIGITAL; 
+					end else begin 
+						state <= POLL_ANALOG; 
+					end
+				
 			end
 			POLL_DIGITAL: begin
 				digitalDataRequest <= 1'b1;

@@ -12,6 +12,7 @@ module DTFM (
 	input ADC_SDATA,
 	
 	output PWM,
+	output FunFrequency,
 	
 	output pin50,
 	output pin52,
@@ -153,7 +154,7 @@ digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bits
 									
 //Frame OrbitaM8
 
-frameFiller orbMaker( .clk(clk80), .reset(rst), 
+frameFiller orbMaker( .clk(clk80), .reset(rst), .nowRead(FF_RDEN),
 							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
 							.analogData(analogData), .analogDataRequest(analogDataRequest),
 							.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
