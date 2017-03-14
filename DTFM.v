@@ -48,7 +48,7 @@ globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.delayInSec = 20;
 
 pllMain pll ( .inclk0(clk), .c0(clk12), .c1(requestADC) );
-pllRX pll80 ( .inclk0(clk80), .c0(clk240), .c1(clkPWM) );
+pllRX pll80 ( .inclk0(clk80), .c0(clk240), .c1(clkPWM), .c2(FunFrequency));
 
 
 
