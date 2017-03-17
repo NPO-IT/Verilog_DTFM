@@ -21,6 +21,8 @@ module DTFM (
 	output pin75,
 	output pin77,
 	
+	output pin53,
+	
 	output pin83,
 	output pin84,
 	
@@ -38,7 +40,8 @@ module DTFM (
 	output	A23
 );
 wire 				rst, clk12, clk240, clkPWM;		//pwm10M
-assign 			IO_105 = 1'b0;
+wire				UART_CLK, UART;
+assign 			IO_105 = 1'b1;
 assign			EN1 = 1'b1;
 assign			EN2 = 1'b1;
 assign			EN3 = 1'b1;
@@ -48,9 +51,7 @@ globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.delayInSec = 20;
 
 pllMain pll ( .inclk0(clk), .c0(clk12), .c1(requestADC) );
-pllRX pll80 ( .inclk0(clk80), .c0(clk240), .c1(clkPWM), .c2(FunFrequency));
-
-
+pllRX pll80 ( .inclk0(clk80), .c0(clk240), .c1(clkPWM), .c2(FunFrequency), .c3(UART_CLK));
 
 wire				writeBuffer;
 wire				bitBufferData;
@@ -108,7 +109,7 @@ receiverSPI ADCrxreceiverSPI ( .clk(clk80), .reset(rst), .dataRequest(requestADC
 defparam ADCrxreceiverSPI.SLAVE_DELAY = 6'd10;
 
 distributor analog_distributor ( .clk(clk80), .reset(rst),
-	.data(12'd4095-ADC_data), .valid(ADC_valid), .address(ADC_address),
+	.data(12'd4095 - ADC_data), .valid(ADC_valid), .address(ADC_address),
 	.fData(ADC_d), .fRdEn(ADC_v), .power(ADC_POWER), .pwr_chng(p_val)
 );
 defparam analog_distributor.IGNORED_CHANNEL = 5'd1;
@@ -120,6 +121,16 @@ analogBuffer fifoAN ( .clock(clk80), .data(ADC_d), .wrreq(ADC_v),
 
 wire [6:0] duty;
 
+wire [7:0] revertedPOWER;
+assign revertedPOWER[7] = ADC_POWER[4];
+assign revertedPOWER[6] = ADC_POWER[5];
+assign revertedPOWER[5] = ADC_POWER[6];
+assign revertedPOWER[4] = ADC_POWER[7];
+assign revertedPOWER[3] = ADC_POWER[8];
+assign revertedPOWER[2] = ADC_POWER[9];
+assign revertedPOWER[1] = ADC_POWER[10];
+assign revertedPOWER[0] = ADC_POWER[11];
+
 assign pin50 = ADC_POWER[6];
 assign pin52 = ADC_POWER[7];
 assign pin54 = ADC_POWER[8];
@@ -130,17 +141,19 @@ assign pin77 = ADC_POWER[11];
 PowerController p_ctrl(
 	.clk(p_val),
 	.reset(rst),
-	.curr_pwr(ADC_POWER[11:4]),
+	.curr_pwr(/*revertedPOWER),*/ADC_POWER[11:4]),
 	.duty(duty)
 );
 
 PWM pwm (
-	.clk(clk80),
+	.clk(clkPWM),
 	.reset(rst),
-	.duty(7'd29/*duty*/),
+	.duty(duty),
 	.out(PWM)
 );
-					
+			
+assign pin53 = UART;
+UARTTX u_tx( .reset(rst), .clk(UART_CLK), .RQ(p_val), .data(ADC_POWER[11:4]), .tx(UART) );
 //Digital Data
 
 digitalReceiver dRX( .clk240(clk240), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(dFM),

@@ -120,7 +120,7 @@ RESERVED_INPUT_WITH_WEAK_PULLUP : 49        :        :                   :      
 pin50                        : 50        : output : 3.3-V LVTTL       :         : 3         : Y              
 RESERVED_INPUT_WITH_WEAK_PULLUP : 51        :        :                   :         : 3         :                
 pin52                        : 52        : output : 3.3-V LVTTL       :         : 3         : Y              
-RESERVED_INPUT_WITH_WEAK_PULLUP : 53        :        :                   :         : 3         :                
+pin53                        : 53        : output : 3.3-V LVTTL       :         : 3         : Y              
 pin54                        : 54        : output : 3.3-V LVTTL       :         : 4         : Y              
 RESERVED_INPUT_WITH_WEAK_PULLUP : 55        :        :                   :         : 4         :                
 VCCIO4                       : 56        : power  :                   : 3.3V    : 4         :                

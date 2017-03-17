@@ -43,12 +43,16 @@ always@(posedge clk or negedge reset) begin
 			DISTRIBUTE: begin
 				case (current)
 					IGNORED_CHANNEL: state <= WAIT_FRONT;
-					5'd17: begin
-						power <= data;
-						pwr_chng <= 1'b1;
-						state <= WAIT_FRONT;
+//					5'd2: state <= WAIT_FRONT;
+					5'd17: begin					//
+						power <= data;				//
+						pwr_chng <= 1'b1;			//
+						state <= WAIT_FRONT;		//
 					end
 					default: begin
+//						power <= data;		
+//						pwr_chng <= 1'b1;
+
 						fData <= data;
 						fRdEn <=1'b1;
 						state <= WAIT_REAR;
@@ -56,6 +60,7 @@ always@(posedge clk or negedge reset) begin
 				endcase
 			end
 			WAIT_REAR: begin
+//				pwr_chng <= 1'b0;		
 				fRdEn <= 1'b0;
 				if(~valid) begin
 					state <= WAIT_FRONT;
