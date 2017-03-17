@@ -121,16 +121,6 @@ analogBuffer fifoAN ( .clock(clk80), .data(ADC_d), .wrreq(ADC_v),
 
 wire [6:0] duty;
 
-wire [7:0] revertedPOWER;
-assign revertedPOWER[7] = ADC_POWER[4];
-assign revertedPOWER[6] = ADC_POWER[5];
-assign revertedPOWER[5] = ADC_POWER[6];
-assign revertedPOWER[4] = ADC_POWER[7];
-assign revertedPOWER[3] = ADC_POWER[8];
-assign revertedPOWER[2] = ADC_POWER[9];
-assign revertedPOWER[1] = ADC_POWER[10];
-assign revertedPOWER[0] = ADC_POWER[11];
-
 assign pin50 = ADC_POWER[6];
 assign pin52 = ADC_POWER[7];
 assign pin54 = ADC_POWER[8];
@@ -141,7 +131,7 @@ assign pin77 = ADC_POWER[11];
 PowerController p_ctrl(
 	.clk(p_val),
 	.reset(rst),
-	.curr_pwr(/*revertedPOWER),*/ADC_POWER[11:4]),
+	.curr_pwr(ADC_POWER[11:4]),
 	.duty(duty)
 );
 
