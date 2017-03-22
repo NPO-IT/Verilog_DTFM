@@ -47,73 +47,22 @@ reg	[5:0]		pMark;
 reg	[2:0]		mSeq;
 reg	[43:0]	marker;
 reg	[14:0]	bitsWritten;
-reg	[11:0]	cntMarker;
+reg	[3:0]	cntMarker;
+reg	[10:0]	counter;
 
 always@(posedge clk240 or negedge rst) begin
 	if (~rst) begin
-		writeBuffer <= 1'b0;
-		state <= WAIT_MK;
-		bitBufferData <= 1'b1;
-		pMark <= 6'd43;
-		mSeq <= 3'd0;
-		markerNumber <= 2'b0;
-		marker <= 44'b0;
-		bitsWritten <= 15'b0;
-		cntMarker <= 12'd0;
+		cntMarker <= 4'd0;
+		counter <= 10'b0;
 	end else begin
-		case(state)
-			WAIT_MK: begin
-				if (syncFront) begin
-					state <= WRITE_MARKER;
-					markerNumber <= 2'b0;
-					cntMarker <= 12'b0;
-					bitsWritten <= 15'd0;
-					pMark <= 6'd43;
-					mSeq <= 3'd0;
-				end
+			if (clkRear) begin
+				cntMarker <= cntMarker + 1'b1;
+				bitBufferData <= counter[cntMarker];
+				writeBuffer <= 1'b1;
+			end else begin
+				if(cntMarker==15) counter <= counter + 1'b1;
+				writeBuffer <= 1'b0;
 			end
-			WRITE_MARKER: begin
-				mSeq <= mSeq + 1'b1;
-				case (mSeq)
-					0: marker <= mark[markerNumber];
-					1: begin
-						if (pMark == 6'd63) begin
-							pMark <= 6'd43;
-							mSeq <= 3'd0;
-							markerNumber <= markerNumber + 1'b1;
-							state <= WRITE_DATA;
-						end else begin
-							bitBufferData <= marker[pMark];
-							writeBuffer <= 1'b1;
-						end
-					end
-					2: begin
-						writeBuffer <= 1'b0;
-						pMark <= pMark - 1'b1;
-						mSeq <= 1'b1;
-					end
-				endcase
-			end
-			WRITE_DATA: begin
-				if (bitsWritten == 15'd10240) begin
-					state <= WAIT_MK;
-					writeBuffer <= 1'b0;
-				end else begin
-					if (clkRear) begin
-						bitsWritten <= bitsWritten + 1'b1;
-						cntMarker <= cntMarker + 1'b1;
-						bitBufferData <= dDAT;
-						writeBuffer <= 1'b1;
-					end else begin
-						writeBuffer <= 1'b0;
-						if(cntMarker == 12'd2816) begin
-							cntMarker <= 12'b0;
-							state <= WRITE_MARKER;
-						end
-					end
-				end
-			end
-		endcase
 	end
 end
 

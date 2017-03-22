@@ -146,19 +146,38 @@ assign pin53 = UART;
 UARTTX u_tx( .reset(rst), .clk(UART_CLK), .RQ(p_val), .data(ADC_POWER[11:4]), .tx(UART) );
 //Digital Data
 
-digitalReceiver dRX( .clk240(clk240), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(dFM),
+digitalReceiver dRX( .clk240(clk80), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(dFM),
 							.bitBufferData(bitBufferData), .writeBuffer(writeBuffer) );
 
-bitBuffer bitBuf ( .clock(clk240), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), 
+bitBuffer bitBuf ( .clock(clk80), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), 
 							.empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed) );
 
-digitalDataOrZeroes dorz( .clk(clk240), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer), 
+digitalDataOrZeroes dorz( .clk(clk80), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer), 
 									.dataRequest(digitalDataRequest), .data(digitalData), .dataReady(digitalDataReady) );
 									
 //Frame OrbitaM8
 
-frameFiller orbMaker( .clk(clk80), .reset(rst), .nowRead(FF_RDEN),
-							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
+reg	[10:0]	digitalTestCounter;
+wire	[11:0]	digitalTestData;
+reg	[2:0]		readReg;
+wire				readFront;
+always@(posedge clk80 or negedge rst) begin
+	if (~rst) begin readReg <= 3'b0; end
+	else begin readReg <= { readReg[1:0],  FF_RDEN }; end
+end
+assign	readFront	=	(!readReg[2] & readReg[1]);
+always@(posedge clk80 or negedge rst) begin
+	if (~rst) begin 
+		digitalTestCounter <= 11'd0; 
+	end else begin 
+		if (readFront) digitalTestCounter <= digitalTestCounter + 1'b1;
+	end
+end
+assign digitalTestData = {1'b0, digitalTestCounter};
+
+
+frameFiller orbMaker( .clk(clk80), .reset(rst), .nowRead(FF_RDEN), .nowAddr(FF_RADR),
+							.digitalData(digitalTestData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
 							.analogData(analogData), .analogDataRequest(analogDataRequest),
 							.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
 

@@ -9,6 +9,7 @@ module frameFiller(
 	output reg				analogDataRequest,
 	
 	input						nowRead,
+	input			[9:0]		nowAddr,
 	input						orbSwitch,
 	output reg	[11:0]	orbData,
 	output reg	[9:0]		orbAddr,
@@ -17,15 +18,20 @@ module frameFiller(
 
 reg	[2:0]		valReg;
 wire				valFront;
+reg	[2:0]		readReg;
+wire				readRear;
 reg	[2:0]		fmReg;
 wire				fmChange;
 
 always@(posedge clk or negedge reset) begin
+	if (~reset) begin readReg <= 3'b0; end
+	else begin readReg <= { readReg[1:0],  nowRead }; end
 	if (~reset) begin valReg <= 3'b0; end
 	else begin valReg <= { valReg[1:0],  digitalDataReady }; end
 	if (~reset) begin fmReg <= 3'b0; end
 	else begin fmReg <= { fmReg[1:0],  orbSwitch }; end
 end
+assign	readRear	=	(readReg[2] & !readReg[1]);
 assign	valFront	=	(!valReg[2] & valReg[1]);
 assign	fmChange = (!fmReg[2] & fmReg[1]) | (fmReg[2] & !fmReg[1]);
 
@@ -46,7 +52,7 @@ always@(posedge clk or negedge reset) begin
 		digitalDataRequest <= 1'b0;
 		cntVal <= 3'd0;
 		orbData <= 12'b0;
-		orbAddr <= 10'b0;
+		orbAddr <= nowAddr;
 		orbWrEn <= 1'b0;
 		analogDataRequest <= 1'd0;
 	end else begin
@@ -58,13 +64,13 @@ always@(posedge clk or negedge reset) begin
 				end
 			end
 			CHECK_ADDRESS: begin
-				
-					if(orbAddr[1:0] != 2'd0) begin 
-						/*if(nowRead)*/ state <= POLL_DIGITAL; 
+				if(readRear) begin
+					if(nowAddr[1:0] != 2'd0) begin 
+						state <= POLL_DIGITAL; 
 					end else begin 
 						state <= POLL_ANALOG; 
 					end
-				
+				end
 			end
 			POLL_DIGITAL: begin
 				digitalDataRequest <= 1'b1;
