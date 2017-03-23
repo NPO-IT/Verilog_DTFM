@@ -4,7 +4,7 @@ PLLSPEmax	84
 PLLSPEmin	-53
 
 PLL_Name	pllRX:pll80|altpll:altpll_component|pllRX_altpll:auto_generated|pll1
-PLLJITTER	34
+PLLJITTER	33
 PLLSPEmax	84
 PLLSPEmin	-53
 
