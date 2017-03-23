@@ -2,95 +2,69 @@ module digitalDataOrZeroes (
 	input						clk,		//240M
 	input						reset,
 	
+	input						bitBufferEmpty,
 	input						bitData,
-	input			[14:0]	bitsUsed,
-	output reg				bitRequest,
+	output reg				bitAck,
 	
-	input						dataRequest,
-	output reg	[11:0]	data,
+	input						dataRq,
+	output reg	[11:0]	dataOut,
 	output reg				dataReady
 );
+
+localparam		WAIT_RQ = 2'd0;
+localparam		MAKE_DATA = 2'd1;
+localparam		WRITE_DATA = 2'd2;
+localparam		SEND_DATA = 2'd3;
+localparam		POINTER_START = 4'd11;
+localparam		POINTER_END = 4'd1;
 
 reg	[2:0]		rqReg;
 wire				rqFront;
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin rqReg <= 3'b0; end
-	else begin rqReg <= { rqReg[1:0],  dataRequest }; end
+	else begin rqReg <= { rqReg[1:0],  dataRq }; end
 end
 assign	rqFront	=	(!rqReg[2] & rqReg[1]);
 
 reg	[1:0]		state;
-reg	[4:0]		seq;
-reg	[14:0]	bitsTaken;
-reg				bitToWrite;
+reg				bitToPut;
 reg	[3:0]		pointer;
-reg				full;
-reg	[2:0]		cntVal;
-
-localparam		WAIT_RQ = 2'd0;
-localparam		WRITE_DATA = 2'd1;
-localparam		SEND_DATA = 2'd2;
-
-localparam		POINTER_START = 4'd11;
-localparam		POINTER_END = 4'd0;
+reg	[1:0]		delay;
 
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin
 		pointer <= POINTER_START;
 		state <= 2'd0;
-		seq <= 5'd0;
-		bitsTaken <= 15'd0;
-		bitToWrite <= 1'b0;
-		full <= 1'b0;
-		bitRequest = 1'b0;
-		data <= 12'd0;
-		dataReady <= 1'b0;
-		cntVal <= 3'd0;
+		bitToPut <= 1'b0;
+		delay <= 2'd0;
 	end else begin
-		if (bitsUsed > 15'd10416) full <= 1'b1;
-		
 		case (state)
-			WAIT_RQ: begin
-				if (rqFront) state <= WRITE_DATA;
+			WAIT_RQ: if (rqFront) state <= MAKE_DATA;
+			MAKE_DATA: begin
+				if (!bitBufferEmpty) begin
+					bitToPut <= bitData;
+					bitAck <= 1'b1;
+				end else begin
+					bitToPut <= 1'b0;
+				end
+				state <= WRITE_DATA;
 			end
 			WRITE_DATA: begin
-				seq <= seq + 1'b1;
-				case(seq)
-					0: begin
-						if (bitsTaken < 15'd10415 && full) begin
-							bitsTaken <= bitsTaken + 1'b1;
-							bitToWrite <= bitData;
-							bitRequest <= 1'b1;
-						end else begin
-							full <= 1'b0;
-							bitsTaken <= 15'd0;
-							bitToWrite <= 1'b0;
-						end
-					end
-					1: begin
-						bitRequest <= 1'b0;
-						data[pointer] <= bitToWrite;
-						pointer <= pointer - 1'b1;
-					end
-					2: begin
-						if (pointer == POINTER_END) begin
-							pointer <= POINTER_START;
-							seq <= 5'd0;
-							state <= SEND_DATA;
-						end else begin
-							seq <= 5'd0;
-						end
-					end
-				endcase
+				bitAck <= 1'b0;
+				dataOut[pointer] <= bitToPut;
+				pointer <= pointer - 1'b1;
+				if (pointer == POINTER_END)
+					state <= SEND_DATA;
+				else
+					state <= MAKE_DATA;
 			end
 			SEND_DATA: begin
-				if (cntVal < 6) begin 			//long WrEn here, even longer if needed
-					dataReady <= 1'b1;
-					cntVal <= cntVal + 1'b1;
-				end else begin
-					cntVal <= 3'd0;
-					dataReady <= 1'b0;
+				pointer <= POINTER_START;
+				dataReady <= 1'b1;
+				delay <= delay + 1'b1;
+				if (delay == 2'd3) begin
 					state <= WAIT_RQ;
+					delay <= 2'd0;
 				end
 			end
 		endcase

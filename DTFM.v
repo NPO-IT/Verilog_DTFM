@@ -39,7 +39,7 @@ module DTFM (
 	output	A13,
 	output	A23
 );
-wire 				rst, clk12, clk240, clkPWM;		//pwm10M
+wire 				rst, clk12, clkPWM;		//pwm10M
 wire				UART_CLK, UART;
 assign 			IO_105 = 1'b1;
 assign			EN1 = 1'b1;
@@ -51,7 +51,7 @@ globalReset aCLR ( .clk(clk), .rst(rst) );
 	defparam aCLR.delayInSec = 20;
 
 pllMain pll ( .inclk0(clk), .c0(clk12), .c1(requestADC) );
-pllRX pll80 ( .inclk0(clk80), .c0(clk240), .c1(clkPWM), .c2(FunFrequency), .c3(UART_CLK));
+pllRX pll80 ( .inclk0(clk80), /*.c0(clk240),*/ .c1(clkPWM), .c2(FunFrequency), .c3(UART_CLK));
 
 wire				writeBuffer;
 wire				bitBufferData;
@@ -151,33 +151,69 @@ digitalReceiver dRX( .clk240(clk80), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(d
 
 bitBuffer bitBuf ( .clock(clk80), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), 
 							.empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed) );
+							
 
-digitalDataOrZeroes dorz( .clk(clk80), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer), 
-									.dataRequest(digitalDataRequest), .data(digitalData), .dataReady(digitalDataReady) );
-									
+// test counter to check incoming data
+//reg	[10:0]	digitalTestCounter;
+//reg	[3:0]		digitalTestPointer;
+//wire				digitalTestData;
+//reg	[2:0]		readReg;
+//wire				readFront;
+//always@(posedge clk80 or negedge rst) begin
+//	if (~rst) begin readReg <= 3'b0; end
+//	else begin readReg <= { readReg[1:0],  readBuffer }; end
+//end
+//assign	readFront	=	(!readReg[2] & readReg[1]);
+//always@(posedge clk80 or negedge rst) begin
+//	if (~rst) begin 
+//		digitalTestCounter <= 11'd0; 
+//		digitalTestPointer <= 4'd10;
+//	end else begin 
+//		if (readFront) begin
+//			digitalTestPointer <= digitalTestPointer - 1'b1;
+//			if (digitalTestPointer == 4'd0) begin
+//				digitalTestPointer <= 4'd10;
+//				digitalTestCounter <= digitalTestCounter + 1'b1;
+//			end
+//		end
+//	end
+//end
+//assign digitalTestData = digitalTestCounter[digitalTestPointer];
+
+/*digitalDataOrZeroes dorz( .clk(clk80), .reset(rst),
+	//.bitData(digitalTestData),
+	.bitData(bufferData),
+	.bitBufferEmpty(bufferEmpty),
+	.bitAck(readBuffer),
+	
+	.dataRq(digitalDataRequest),
+	.dataOut(digitalData),
+	.dataReady(digitalDataReady) );
+	*/								
 //Frame OrbitaM8
 
-reg	[10:0]	digitalTestCounter;
-wire	[11:0]	digitalTestData;
-reg	[2:0]		readReg;
-wire				readFront;
-always@(posedge clk80 or negedge rst) begin
-	if (~rst) begin readReg <= 3'b0; end
-	else begin readReg <= { readReg[1:0],  FF_RDEN }; end
-end
-assign	readFront	=	(!readReg[2] & readReg[1]);
-always@(posedge clk80 or negedge rst) begin
-	if (~rst) begin 
-		digitalTestCounter <= 11'd0; 
-	end else begin 
-		if (readFront) digitalTestCounter <= digitalTestCounter + 1'b1;
-	end
-end
-assign digitalTestData = {1'b0, digitalTestCounter};
+// test counter to check incoming data
+//reg	[10:0]	digitalTestCounter;
+//wire	[11:0]	digitalTestData;
+//reg	[2:0]		readReg;
+//wire				readFront;
+//always@(posedge clk80 or negedge rst) begin
+//	if (~rst) begin readReg <= 3'b0; end
+//	else begin readReg <= { readReg[1:0],  FF_RDEN }; end
+//end
+//assign	readFront	=	(!readReg[2] & readReg[1]);
+//always@(posedge clk80 or negedge rst) begin
+//	if (~rst) begin 
+//		digitalTestCounter <= 11'd0; 
+//	end else begin 
+//		if (readFront) digitalTestCounter <= digitalTestCounter + 1'b1;
+//	end
+//end
+//assign digitalTestData = {1'b0, digitalTestCounter};
 
 
 frameFiller orbMaker( .clk(clk80), .reset(rst), .nowRead(FF_RDEN), .nowAddr(FF_RADR),
-							.digitalData(digitalTestData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
+							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
 							.analogData(analogData), .analogDataRequest(analogDataRequest),
 							.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
 
