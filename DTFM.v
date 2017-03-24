@@ -150,34 +150,40 @@ digitalReceiver dRX( .clk240(clk80), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(d
 							.bitBufferData(bitBufferData), .writeBuffer(writeBuffer) );
 
 bitBuffer bitBuf ( .clock(clk80), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), 
-							.empty(bufferEmpty), .full(bufferFull), .q(bufferData), .usedw(bufferUsed) );
+							.empty(bufferEmpty)/*, .q(bufferData)*/ );
+							
 
-digitalDataOrZeroes dorz( .clk(clk80), .reset(rst), .bitData(bufferData), .bitsUsed(bufferUsed), .bitRequest(readBuffer), 
-									.dataRequest(digitalDataRequest), .data(digitalData), .dataReady(digitalDataReady) );
-									
-//Frame OrbitaM8
-
-reg	[10:0]	digitalTestCounter;
-wire	[11:0]	digitalTestData;
-reg	[2:0]		readReg;
-wire				readFront;
+reg	[2:0]		detReg;
+wire				detFront;
 always@(posedge clk80 or negedge rst) begin
-	if (~rst) begin readReg <= 3'b0; end
-	else begin readReg <= { readReg[1:0],  FF_RDEN }; end
+	if (~rst) begin detReg <= 3'b0; end
+	else begin detReg <= { detReg[1:0], readBuffer }; end
 end
-assign	readFront	=	(!readReg[2] & readReg[1]);
+assign	detFront	=	(!detReg[2] & detReg[1]);
+reg	[10:0]	counter;
+reg	[3:0]		pointer;
 always@(posedge clk80 or negedge rst) begin
-	if (~rst) begin 
-		digitalTestCounter <= 11'd0; 
-	end else begin 
-		if (readFront) digitalTestCounter <= digitalTestCounter + 1'b1;
+	if (~rst) begin
+		counter <= 11'd0;
+		pointer <= 4'd10;
+	end else begin
+		if (detFront) begin
+			pointer <= pointer - 1'b1;
+			if (pointer == 4'd0) begin
+				pointer <= 4'd10;
+				counter <= counter + 1'b1;
+			end
+		end
 	end
 end
-assign digitalTestData = {1'b0, digitalTestCounter};
+assign bufferData = counter[pointer];
 
+digitalDataOrZeroes dorz( .clk(clk80), .reset(rst), .bitData(bufferData), .bitBufEmpty(1'b0/*bufferEmpty*/), .bitRequest(readBuffer), 
+									.dataRequest(digitalDataRequest), .data(digitalData), .dataReady(digitalDataReady) );
 
+//Frame OrbitaM8
 frameFiller orbMaker( .clk(clk80), .reset(rst), .nowRead(FF_RDEN), .nowAddr(FF_RADR),
-							.digitalData(digitalTestData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
+							.digitalData(digitalData), .digitalDataReady(digitalDataReady), .digitalDataRequest(digitalDataRequest),
 							.analogData(analogData), .analogDataRequest(analogDataRequest),
 							.orbSwitch(FF_SWCH), .orbData(DW_DATA), .orbAddr(DW_ADDR), .orbWrEn(DW_WREN) );
 

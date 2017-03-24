@@ -155,4 +155,5 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin83
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin77
 set_location_assignment PIN_53 -to pin53
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to pin53
+set_global_assignment -name VERILOG_FILE DatOrNot.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
