@@ -53,17 +53,9 @@ globalReset aCLR ( .clk(clk), .rst(rst) );
 pllMain pll ( .inclk0(clk), .c0(clk12), .c1(requestADC) );
 pllRX pll80 ( .inclk0(clk80), .c1(clkPWM), .c2(FunFrequency), .c3(UART_CLK));
 
-wire				writeBuffer;
-wire				bitBufferData;
-wire	[14:0]	bufferUsed;
-wire				bufferFull;
-wire				bufferEmpty;
-wire				readBuffer;
-wire				bufferData;
 wire				digitalDataRequest;
 wire	[11:0]	digitalData;
 wire				digitalDataReady;
-
 wire				FF_RDEN, FF_SWCH;
 wire	[9:0]		FF_RADR;
 reg	[11:0]	FF_DATA;
@@ -144,41 +136,62 @@ PWM pwm (
 			
 assign pin53 = UART;
 UARTTX u_tx( .reset(rst), .clk(UART_CLK), .RQ(p_val), .data(ADC_POWER[11:4]), .tx(UART) );
+
 //Digital Data
+wire				writeBuffer;
+reg				writeBuffer0;
+reg				writeBuffer1;
+wire				bitBufferData;
+reg				bufferEmpty;
+wire				bufferEmpty0;
+wire				bufferEmpty1;
+wire				readBuffer;
+reg				readBuffer0;
+reg				readBuffer1;
+reg				bufferData;
+wire				bufferData0;
+wire				bufferData1;
+wire				RX_SWCH;
+wire				flush;
+reg				flush0;
+reg				flush1;
 
-digitalReceiver dRX( .clk240(clk80), .rst(rst), .dCLK(dCLK), .dDAT(dDAT), .dFM(dFM),
-							.bitBufferData(bitBufferData), .writeBuffer(writeBuffer) );
-
-bitBuffer bitBuf ( .clock(clk80), .data(bitBufferData), .rdreq(readBuffer), .wrreq(writeBuffer), 
-							.empty(bufferEmpty)/*, .q(bufferData)*/ );
-							
-
-reg	[2:0]		detReg;
-wire				detFront;
-always@(posedge clk80 or negedge rst) begin
-	if (~rst) begin detReg <= 3'b0; end
-	else begin detReg <= { detReg[1:0], readBuffer }; end
-end
-assign	detFront	=	(!detReg[2] & detReg[1]);
-reg	[10:0]	counter;
-reg	[3:0]		pointer;
-always@(posedge clk80 or negedge rst) begin
-	if (~rst) begin
-		counter <= 11'd0;
-		pointer <= 4'd10;
-	end else begin
-		if (detFront) begin
-			pointer <= pointer - 1'b1;
-			if (pointer == 4'd0) begin
-				pointer <= 4'd10;
-				counter <= counter + 1'b1;
-			end
+always@(*) begin
+	case (RX_SWCH)
+		0: begin
+			bufferData <= bufferData0;
+			bufferEmpty <= bufferEmpty0;
+			readBuffer0 <= readBuffer;
+			readBuffer1 <= 1'b0;
+			writeBuffer0 <= 1'b0;
+			writeBuffer1 <= writeBuffer;
+			flush1 <= flush;
+			flush0 <= 1'b0;
 		end
-	end
+		1: begin
+			bufferData <= bufferData1;
+			bufferEmpty <= bufferEmpty1;
+			readBuffer1 <= readBuffer;
+			readBuffer0 <= 1'b0;
+			writeBuffer1 <= 1'b0;
+			writeBuffer0 <= writeBuffer;
+			flush0 <= flush;
+			flush1 <= 1'b0;
+		end
+	endcase
 end
-assign bufferData = counter[pointer];
 
-digitalDataOrZeroes dorz( .clk(clk80), .reset(rst), .bitData(bufferData), .bitBufEmpty(1'b0/*bufferEmpty*/), .bitRequest(readBuffer), 
+RXandCTRL dRX( .reset(rst), .clk(clk80), .dMK(dFM), .dCLK(dCLK), .dDAT(dDAT),
+				.bit(bitBufferData), .val(writeBuffer), .swch(RX_SWCH), .flush(flush)
+);
+
+bitBuffer bitBuf0 ( .clock(clk80), .data(bitBufferData), .rdreq(readBuffer0), .wrreq(writeBuffer0), 
+							.empty(bufferEmpty0), .q(bufferData0), .sclr(flush0) );
+							
+bitBuffer bitBuf1 ( .clock(clk80), .data(bitBufferData), .rdreq(readBuffer1), .wrreq(writeBuffer1), 
+							.empty(bufferEmpty1), .q(bufferData1), .sclr(flush1) );
+
+digitalDataOrZeroes dorz( .clk(clk80), .reset(rst), .bitData(bufferData), .bitBufEmpty(bufferEmpty), .bitRequest(readBuffer), 
 									.dataRequest(digitalDataRequest), .data(digitalData), .dataReady(digitalDataReady) );
 
 //Frame OrbitaM8
