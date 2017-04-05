@@ -19,69 +19,87 @@ always@(posedge clk or negedge reset) begin
 end
 assign	rqFront	=	(!rqReg[2] & rqReg[1]);
 
-reg	[1:0]		state;
+localparam		POINTER_START = 4'd11;
+localparam		POINTER_END = 4'd1;
+
+reg	[2:0]		state;
 reg	[2:0]		seq;
 reg				bitToWrite;
 reg	[3:0]		pointer;
 reg	[2:0]		cntVal;
+reg				isZeros;
 
-localparam		WAIT_RQ = 2'd0;
-localparam		WRITE_DATA = 2'd1;
-localparam		SEND_DATA = 2'd2;
+localparam		WAIT_RQ = 3'd0;
+localparam		PICK_BUFFER = 3'd1;
+localparam		PICK_ZEROS = 3'd2;
+localparam		WRITE_DATA = 3'd3;
+localparam		GIVE_WORD = 3'd4;
+localparam		CHECK_ZEROS = 3'd5;
 
-localparam		POINTER_START = 4'd11;
-localparam		POINTER_END = 4'd0;
 
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin
 		pointer <= POINTER_START;
-		state <= 2'd0;
+		state <= WAIT_RQ;
 		seq <= 3'd0;
 		bitToWrite <= 1'b0;
 		bitRequest = 1'b0;
 		data <= 12'd0;
 		dataReady <= 1'b0;
 		cntVal <= 3'd0;
+		isZeros <= 1'b0;
 	end else begin
 		case (state)
 			WAIT_RQ: begin
-				if (rqFront) state <= WRITE_DATA;
+				isZeros <= 1'b0;
+				pointer <= POINTER_START;
+				cntVal <= 3'd0;
+				dataReady <= 1'b0;
+				if (rqFront) begin
+					bitToWrite <= 1'b0;
+					state <= PICK_BUFFER;
+				end
+			end
+			PICK_BUFFER: begin
+				if (bitBufEmpty)begin
+					state <= PICK_ZEROS;
+				end else begin
+					bitToWrite <= bitData;
+					bitRequest <= 1'b1;
+					state <= WRITE_DATA;
+				end
+			end
+			PICK_ZEROS: begin
+				bitToWrite <= 1'b0;
+				isZeros <= 1'b1;
+				state <= WRITE_DATA;
 			end
 			WRITE_DATA: begin
-				seq <= seq + 1'b1;
-				case(seq)
-					0: begin
-						if (!bitBufEmpty) begin
-							bitToWrite <= bitData;
-							bitRequest <= 1'b1;
-						end else begin
-							bitToWrite <= 1'b0;
-						end
-					end
-					1: begin
-						bitRequest <= 1'b0;
-						data[pointer] <= bitToWrite;
-						pointer <= pointer - 1'b1;
-					end
-					2: begin
-						if (pointer == POINTER_END) begin
-							pointer <= POINTER_START;
-							seq <= 3'd0;
-							state <= SEND_DATA;
-						end else begin
-							seq <= 3'd0;
-						end
-					end
-				endcase
+				bitRequest <= 1'b0;
+				data[pointer] <= bitToWrite;
+				pointer <= pointer - 1'b1;
+				if (pointer == POINTER_END) begin
+					state <= GIVE_WORD;
+				end else begin
+					state <= CHECK_ZEROS;
+				end
 			end
-			SEND_DATA: begin
-				if (cntVal < 3'd6) begin 			//long WrEn here, even longer if needed
+			GIVE_WORD: begin
+				pointer <= POINTER_START;
+				if (cntVal < 3'd4) begin
 					dataReady <= 1'b1;
 					cntVal <= cntVal + 1'b1;
 				end else begin
 					cntVal <= 3'd0;
 					dataReady <= 1'b0;
 					state <= WAIT_RQ;
+				end
+			end
+			CHECK_ZEROS: begin
+				if(isZeros == 1'b1) begin
+					state <= PICK_ZEROS;
+				end else begin
+					state <= PICK_BUFFER;
 				end
 			end
 		endcase

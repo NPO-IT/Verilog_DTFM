@@ -4,7 +4,7 @@ JedecChain;
 	DefaultMfr(6E);
 
 	P ActionCode(Cfg)
-		Device PartName(EPCS16) Path("D:/FTP/Ovchinnikov/Pieces/FPGA/DTFM/output_files/") File("DTFM.pof") MfrSpec(OpMask(1) Child_OpMask(1 1));
+		Device PartName(EPCS16) Path("H:/DTFM/output_files/") File("DTFM.pof") MfrSpec(OpMask(1) Child_OpMask(1 1));
 
 ChainEnd;
 

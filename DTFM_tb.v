@@ -1458,7 +1458,7 @@ assign w[1407] = 16'b1111011111111110;
 
 initial begin
 	repeat(10)@(posedge dCLK);
-	repeat(15)begin
+	repeat(100)begin
 		repeat(10240) begin
 			dFM = 0;
 			dDAT = w[wrdCnt2][bitCnt];

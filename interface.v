@@ -11,12 +11,12 @@ module interface (
 );
 
 reg	[2:0]		regSync;
-wire				syncFront;
+wire				mkFront;
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin regSync <= 3'b0; end
 	else begin regSync <= { regSync[1:0],  imk }; end
 end
-assign	syncFront	=	(!regSync[2] & regSync[1]);
+assign	mkFront	=	(!regSync[2] & regSync[1]);
 
 reg	[2:0]		regClk;
 wire				clkRear;
@@ -35,19 +35,20 @@ always@(posedge clk or negedge reset) begin
 	end else begin 
 		case (state)
 			0: begin
-				if (syncFront) 
+				oflush <= 1'b0;
+				if (mkFront) begin
 					state <= 2'd1;
+				end
 			end
 			1: begin
 				osw <= !osw;
+				oflush <= 1'b1;
 				state <= 2'd2;
 			end
 			2: begin
-				oflush <= 1'b1;
 				state <= 2'd3;
 			end
 			3: begin
-				oflush <= 1'b0;
 				state <= 2'd0;
 			end
 		endcase

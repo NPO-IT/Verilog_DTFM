@@ -113,7 +113,7 @@ analogBuffer fifoAN ( .clock(clk80), .data(ADC_d), .wrreq(ADC_v),
 
 wire [6:0] duty;
 
-assign pin50 = ADC_POWER[6];
+assign pin53 = ADC_POWER[6];
 assign pin52 = ADC_POWER[7];
 assign pin54 = ADC_POWER[8];
 assign pin73 = ADC_POWER[9];
@@ -133,9 +133,6 @@ PWM pwm (
 	.duty(duty),
 	.out(PWM)
 );
-			
-assign pin53 = UART;
-UARTTX u_tx( .reset(rst), .clk(UART_CLK), .RQ(p_val), .data(ADC_POWER[11:4]), .tx(UART) );
 
 //Digital Data
 wire				writeBuffer;
@@ -180,6 +177,16 @@ always@(*) begin
 		end
 	endcase
 end
+
+wire sendUART;
+wire [7:0] sendDATA;
+assign pin50 = UART;
+UARTTX u_tx( .reset(rst), .clk(UART_CLK), .RQ(sendUART), .data(sendDATA), .tx(UART) );
+
+inMonitor im (.reset(rst), .clk(clk80), .dMK(dFM), 
+					.inBit(bitBufferData), .inVal(writeBuffer),
+					.sendUART(sendUART), .data(sendDATA)
+);
 
 RXandCTRL dRX( .reset(rst), .clk(clk80), .dMK(dFM), .dCLK(dCLK), .dDAT(dDAT),
 				.bit(bitBufferData), .val(writeBuffer), .swch(RX_SWCH), .flush(flush)

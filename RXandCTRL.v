@@ -42,7 +42,7 @@ localfifo rxfifo(
 
 markers rxmrk(
 	.clk(clk),
-	.reset(!flush),
+	.reset(!flush & reset),
 	.iemp(sub_fm_emp),
 	.idat(sub_fm_dat),
 	.orack(sub_fm_rack),

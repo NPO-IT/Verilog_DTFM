@@ -24,17 +24,17 @@ localparam CHECK = 3'd3;
 
 reg	[1:0]		m;
 reg	[2:0]		state;
-reg	[2:0]		sequence;
+reg	[3:0]		sequence;
 reg	[43:0]	current_marker;
 reg	[5:0]		marker_pointer;
 reg	[11:0]	bit;
 always@(posedge clk or negedge reset) begin
 	if (~reset) begin
-		m <= 2'd0;
+		m <= 2'b00;
 		bit <= 12'd0;
 		state <= WRITE_MARKER;
-		sequence <= 3'd0;
-		current_marker <= 44'd0;
+		sequence <= 4'd0;
+		current_marker <= mark[0];
 		marker_pointer <= 6'd43;
 		orack <= 1'b0;
 		odat <= 1'b0;
@@ -44,43 +44,43 @@ always@(posedge clk or negedge reset) begin
 			WRITE_MARKER: begin
 				sequence <= sequence + 1'b1;
 				case (sequence)
-					0: current_marker <= mark[m];
-					1: odat <= current_marker[marker_pointer];
-					2: oval <= 1'b1;
-					3: begin
+					0, 1, 2: current_marker <= mark[m];
+					3, 4, 5: odat <= current_marker[marker_pointer];
+					6: oval <= 1'b1;
+					7: begin
 						oval <= 1'b0;
 						marker_pointer <= marker_pointer - 1'b1;
 					end
-					4: begin
+					10: begin
 						if (marker_pointer == 6'd63) begin
-							sequence <= 3'd0;						
-							marker_pointer <= 6'd43;
 							state <= WRITE_DATA;
+							sequence <= 4'd0;
 							m <= m + 1'b1;
 						end else begin
-							sequence <= 3'd1;
+							sequence <= 4'd1;
 						end
 					end
 				endcase
 			end
 			WRITE_DATA: begin
+				marker_pointer <= 6'd43;
 				case (sequence)
 					0: begin
 						if(!iemp) begin
 							odat <= idat;
-							sequence <= 3'd1;
+							sequence <= 4'd1;
 						end
 					end
 					1: begin
 						orack <= 1'b1;
 						oval <= 1'b1;
 						bit <= bit + 1'b1;
-						sequence <= 3'd2;
+						sequence <= 4'd2;
 					end
 					2: begin
 						orack <= 1'b0;
 						oval <= 1'b0;
-						sequence <= 3'd0;
+						sequence <= 4'd0;
 						state <= CHECK;
 					end
 				endcase
